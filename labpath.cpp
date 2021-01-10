@@ -370,21 +370,41 @@ void hhcl::pvirtfuehraus()
 									obanf=2;
 								}
 							} else {
-								uchar obname{0};
-								RS pid(My,"SELECT COUNT(1) OVER() zl, f.pat_id, concat(gesname(f.pat_id),' (',patalter(f.pat_id),')') FROM faelle f LEFT JOIN namen n USING (pat_id) WHERE n.nachname='"+nteile[nteile.size()-1]+"' AND n.vorname LIKE '"+nteile[0]+"%' AND BhFB<STR_TO_DATE('"+erstl+"','%d.%m.%Y') AND (BhFE1>ADDDATE(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),-4) OR BhFE1=18991230) GROUP BY f.pat_id;",aktc,ZDB);
+								uchar obname{0},obpid{0};
+								RS pid(My,"SELECT COUNT(1) OVER() zl, f.pat_id, CONCAT(gesname(f.pat_id),' (',patalter(f.pat_id),')') FROM faelle f LEFT JOIN namen n USING (pat_id) WHERE n.nachname='"+nteile[nteile.size()-1]+"' AND n.vorname LIKE '"+nteile[0]+"%' AND BhFB<STR_TO_DATE('"+erstl+"','%d.%m.%Y') AND (BhFE1>ADDDATE(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),-4) OR BhFE1=18991230) GROUP BY f.pat_id;",aktc,ZDB);
 								if (!pid.obqueryfehler) {
 									char ***cerg{0};
 									while (cerg=pid.HolZeile(),cerg?*cerg:0) {
 										if (!strcmp(cjj(cerg,0),"1")) {
 											reine.hz("Pat_id",cjj(cerg,1));
+											obpid=1;
 											if (cerg[2]) {
 												reine.hz("Name",cjj(cerg,2));
 												obname=1;
 											}
-										}
+										} else if (strcmp(cjj(cerg,0),"0")) { // mehrere Patienten gefunden
+											RS npid(My,"SELECT COUNT(1) OVER() zl, f.pat_id, CONCAT(gesname(f.pat_id),' (',patalter(f.pat_id),')')"
+													"FROM labor2a l LEFT JOIN namen n USING(pat_id)"
+													"WHERE l.pat_id IN (SELECT GROUP_CONCAT(pat_id SEPARATOR ',') FROM namen WHERE TRIM(CONCAT(titel,' ',vorname,' ',nvors, if(nvors='','',' '),nachname)) = '"+nteile[nteile.size()-1]+"')"
+													"AND zeitpunkt BETWEEEN DATE_SUB(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),INTERVAL 7 DAY) AND DATE_ADD(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),INTERVAL 1 DAY) ORDER BY zeitpunkt DESC",aktc,ZDB); 
+											if (!npid.obqueryfehler) {
+												char ***cerg{0};
+												while (cerg=npid.HolZeile(),cerg?*cerg:0) {
+													if (!strcmp(cjj(cerg,0),"1")) {
+														reine.hz("Pat_id",cjj(cerg,1));
+														obpid=1;
+														if (cerg[2]) {
+															reine.hz("Name",cjj(cerg,2));
+															obname=1;
+														}
+													} // 													if (!strcmp(cjj(cerg,0),"1"))
+													break;
+												} // 												while (cerg=npid.HolZeile(),cerg?*cerg:0)
+											} // if (!npid.obqueryfehler)
+										} // if (!strcmp(cjj(cerg,0),"1")) ... else if (strcmp(cjj(cerg,0),"0"))
 										break;
-									}
-								  if (!obname)
+									} // 									while (cerg=pid.HolZeile(),cerg?*cerg:0)
+									if (!obname)
 										reine.hz("Name",erg[0]);
 									reine.hz("elID",datid);
 									size_t p1,p2,p3,p4;
@@ -413,6 +433,9 @@ void hhcl::pvirtfuehraus()
 													reine.hz("Labhinw","");
 											}
 										}
+									} // 									if ((p1=erg[1].find(':'))!=string::npos)
+									if (obpid) {
+//										RS vw(My,"SELECT 
 									}
 									reine.schreib(/*sammeln*/0,/*obverb*/obverb,/*idp*/0);
 								}
