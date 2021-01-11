@@ -371,19 +371,22 @@ void hhcl::pvirtfuehraus()
 								}
 							} else {
 								uchar obname{0},obpid{0};
-								RS pid(My,"SELECT COUNT(1) OVER() zl, f.pat_id, CONCAT(gesname(f.pat_id),' (',patalter(f.pat_id),')') FROM faelle f LEFT JOIN namen n USING (pat_id) WHERE n.nachname='"+nteile[nteile.size()-1]+"' AND n.vorname LIKE '"+nteile[0]+"%' AND BhFB<STR_TO_DATE('"+erstl+"','%d.%m.%Y') AND (BhFE1>ADDDATE(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),-4) OR BhFE1=18991230) GROUP BY f.pat_id;",aktc,ZDB);
-								if (!pid.obqueryfehler) {
+								string pid,gschl,abkue,einh;
+								RS pd(My,"SELECT COUNT(1) OVER() zl, f.pat_id, CONCAT(gesname(f.pat_id),' (',patalter(f.pat_id),')'),geschlecht FROM faelle f LEFT JOIN namen n USING (pat_id) WHERE n.nachname='"+nteile[nteile.size()-1]+"' AND n.vorname LIKE '"+nteile[0]+"%' AND BhFB<STR_TO_DATE('"+erstl+"','%d.%m.%Y') AND (BhFE1>ADDDATE(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),-4) OR BhFE1=18991230) GROUP BY f.pat_id;",aktc,ZDB);
+								if (!pd.obqueryfehler) {
 									char ***cerg{0};
-									while (cerg=pid.HolZeile(),cerg?*cerg:0) {
+									while (cerg=pd.HolZeile(),cerg?*cerg:0) {
 										if (!strcmp(cjj(cerg,0),"1")) {
+											pid=cjj(cerg,1);
 											reine.hz("Pat_id",cjj(cerg,1));
 											obpid=1;
 											if (cerg[2]) {
 												reine.hz("Name",cjj(cerg,2));
 												obname=1;
 											}
+											if (cerg[3]) gschl=cjj(cerg,3);
 										} else if (strcmp(cjj(cerg,0),"0")) { // mehrere Patienten gefunden
-											RS npid(My,"SELECT COUNT(1) OVER() zl, f.pat_id, CONCAT(gesname(f.pat_id),' (',patalter(f.pat_id),')')"
+											RS npid(My,"SELECT COUNT(1) OVER() zl, f.pat_id, CONCAT(gesname(f.pat_id),' (',patalter(f.pat_id),')'),geschlecht "
 													"FROM labor2a l LEFT JOIN namen n USING(pat_id)"
 													"WHERE l.pat_id IN (SELECT GROUP_CONCAT(pat_id SEPARATOR ',') FROM namen WHERE TRIM(CONCAT(titel,' ',vorname,' ',nvors, if(nvors='','',' '),nachname)) = '"+nteile[nteile.size()-1]+"')"
 													"AND zeitpunkt BETWEEEN DATE_SUB(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),INTERVAL 7 DAY) AND DATE_ADD(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),INTERVAL 1 DAY) ORDER BY zeitpunkt DESC",aktc,ZDB); 
@@ -391,30 +394,34 @@ void hhcl::pvirtfuehraus()
 												char ***cerg{0};
 												while (cerg=npid.HolZeile(),cerg?*cerg:0) {
 													if (!strcmp(cjj(cerg,0),"1")) {
+														pid=cjj(cerg,1);
 														reine.hz("Pat_id",cjj(cerg,1));
 														obpid=1;
 														if (cerg[2]) {
 															reine.hz("Name",cjj(cerg,2));
 															obname=1;
 														}
+														if (cerg[3]) gschl=cjj(cerg,3);
 													} // 													if (!strcmp(cjj(cerg,0),"1"))
 													break;
 												} // 												while (cerg=npid.HolZeile(),cerg?*cerg:0)
 											} // if (!npid.obqueryfehler)
 										} // if (!strcmp(cjj(cerg,0),"1")) ... else if (strcmp(cjj(cerg,0),"0"))
 										break;
-									} // 									while (cerg=pid.HolZeile(),cerg?*cerg:0)
+									} // 									while (cerg=pd.HolZeile(),cerg?*cerg:0)
 									if (!obname)
 										reine.hz("Name",erg[0]);
 									reine.hz("elID",datid);
 									size_t p1,p2,p3,p4;
 									uchar pl{3},oblh{0};
 									if ((p1=erg[1].find(':'))!=string::npos) {
-										reine.hz("Parameter",erg[1].substr(0,p1-1));
+										abkue=erg[1].substr(0,p1);
+										reine.hz("Parameter",abkue);
 										if ((p2=erg[1].find(' ',p1))!=string::npos) {
 											reine.hz("Wert",erg[1].substr(p1+1,p2-p1-1));
 											if ((p3=erg[1].find('(',p2))!=string::npos) {
-												reine.hz("Einheit",erg[1].substr(p2+1,p3-p2-1));
+												einh=erg[1].substr(p2+1,p3-p2-2);
+												reine.hz("Einheit",einh);
 													p4=erg[1].find("|",p3);
 													if (p4!=string::npos) {
 														reine.hz("Normbereich",erg[1].substr(p3+1,p4-p3-1));
@@ -435,10 +442,25 @@ void hhcl::pvirtfuehraus()
 										}
 									} // 									if ((p1=erg[1].find(':'))!=string::npos)
 									if (obpid) {
-//										RS vw(My,"SELECT 
+										RS tm(My,"SELECT TRIM(GROUP_CONCAT(CONCAT(DATE_FORMAT(zp,'%d.%m.%y'),' ',LEFT(raum,3)) ORDER BY zp SEPARATOR '  ')) term FROM termine t WHERE zp >= date(now()) AND pid = "+pid,aktc,ZDB);
+										if (!tm.obqueryfehler) {
+											char ***cerg{0};
+											while (cerg=tm.HolZeile(),cerg?*cerg:0) {
+												reine.hz("Termine",cjj(cerg,0));
+												break;
+											}
+										}
+
+										RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü='"+abkue+"' AND einheit='"+einh+"' "
+												      "AND zeitpunkt<=SUBDATE(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),1) GROUP BY zeitpunkt DESC LIMIT 2\")",aktc,2);
+										if (!llb.obqueryfehler) {
+											char ***cerg{0};
+											cerg=llb.HolZeile(); if (cerg?*cerg:0) reine.hz("Vorwert_1",cjj(cerg,0));
+											cerg=llb.HolZeile(); if (cerg?*cerg:0) reine.hz("Vorwert_2",cjj(cerg,0));
+										}
 									}
 									reine.schreib(/*sammeln*/0,/*obverb*/obverb,/*idp*/0);
-								}
+								} // 								if (!pd.obqueryfehler)
 							}
 						}
 					}
