@@ -45,6 +45,8 @@ char const *DPROG_T[T_MAX+1][SprachZahl]=
 	{"Termine","appointments"},
 	// T_Laborwert
 	{"(path.) Laborwert","pathol.lab value"},
+	// T_quellvz
+	{"Quellverzeichnis","sourcedir"},
 	// T_pruefdb_k,
 	{"pruefdb","checkdb"},
 	// T_pruefdb_l,
@@ -77,6 +79,14 @@ char const *DPROG_T[T_MAX+1][SprachZahl]=
 	{"fertig!","finished!"},
 	// T_Dateien_gefunden
 	{"Dateien gefunden: ","Files found: "},
+	// T_Parse
+	{"Parse: ","Parsing: "},
+	// T_Patient,
+	{"   Patient: ","   Patient: "},
+	// T_namsp,
+	{"Farbe für Namensspalte","color for name column"},
+	// T_wertsp,
+	{"Farbe für Wertspalten","color for value columns"},
 	{"",""} //α
 }; // char const *DPROG_T[T_MAX+1][SprachZahl]=
 
@@ -84,6 +94,29 @@ class TxB Tx((const char* const* const* const*)DPROG_T);
 const char *logdt="/var/log/" DPROG "vorgabe.log";//darauf wird in kons.h verwiesen;
 
 using namespace std; //ω
+
+// von https://stackoverflow.com/questions/3152241/case-insensitive-stdstring-find
+// templated version of my_equal so it could work with both char and wchar_t
+template<typename charT>
+struct my_equal {
+    my_equal( const std::locale& loc ) : loc_(loc) {}
+    bool operator()(charT ch1, charT ch2) {
+        return std::toupper(ch1, loc_) == std::toupper(ch2, loc_);
+    }
+private:
+    const std::locale& loc_;
+};
+
+// find substring (case insensitive)
+template<typename T>
+int iinstr( const T& str1, const T& str2, const std::locale& loc = std::locale() )
+{
+    typename T::const_iterator it = std::search( str1.begin(), str1.end(), 
+        str2.begin(), str2.end(), my_equal<typename T::value_type>(loc) );
+    if ( it != str1.end() ) return it - str1.begin();
+    else return -1; // not found
+}
+
 hhcl::hhcl(const int argc, const char *const *const argv):dhcl(argc,argv,DPROG,/*mitcron*/1) //α
 {
 	//ω
@@ -174,7 +207,10 @@ void hhcl::prueflpath(DB *My, const size_t aktc, const int obverb, const int obl
 			Feld("Vorwert_2","varchar","30","",Tx[T_Vorwert_2],0,0,1),
 			Feld("Normbereich","varchar","300","",Tx[T_Normbereich],0,0,1),
 			Feld("Labhinw","varchar","50","Hinweis des Labors",Tx[T_Hinweise],0,0,1),
-			Feld("Hinweise","varchar","50","",Tx[T_Hinweise],0,0,1),
+			Feld("Hinweise","varchar","50","",Tx[T_Hinweise],0,0,1,""),
+		  Feld("namsp","int","10","",Tx[T_namsp],0,0,1),
+		  Feld("wertsp","int","10","",Tx[T_wertsp],0,0,1),
+		  Feld("hinwsp","int","10","",Tx[T_wertsp],0,0,1),
 			Feld("Termine","varchar","200","",Tx[T_Termine],0,0,1),
 		};
 		Feld ifelder1[] = {Feld("Pat_id"),Feld("Parameter")}; Index i1("Patid_Par",ifelder1,elemzahl(ifelder1));
@@ -286,33 +322,34 @@ string ausg(string str)
 void hhcl::pvirtfuehraus()
 { //ω
 	auto altZDB{ZDB};
-	string datid;
-	int geprueft{0};
+	string datid; // Rueckmeldung des eindeutigen Kennzeichens des geschriebenen Datensatzes
+	svec eindfeld;
+	int geprueft{0}; // 1 = die Tabellen labpathel und labpath wurden schon geprueft, eindfeld schon festgelegt
 	//	ZDB=1;
 	const size_t aktc{0};
 	// unsigned long verarbeitet{0};
 	if (rzf) tabnamen(); // nach rueckfragen
-	if (nurpruefdb) {
+	if (nurpruefdb) { // Kommandozeilenparameter
 		prueftbl();
 	} else {
 		pruefverz(quellvz,obverb,oblog);
 		svec lrue;
-		systemrueck("find "+quellvz+" -maxdepth 1 -type f -iname '*.csv' -printf '%TY%Tm%Td%TH%TM%TS\t%p\n' "+string(obverb?"":"2>/dev/null")+"|sort|cut -f2", obverb,oblog,&lrue,/*obsudc=*/0);
-		fLog(blaus+Tx[T_Dateien_gefunden]+schwarz+ltoan(lrue.size()),1,oblog);
-		if (lrue.size()) {
-			prueftbl();
-		}
-		svec eindfeld; eindfeld<<"id";
+		// alle csv-Dateien im quellvz
+		systemrueck("find "+quellvz+" -maxdepth 1 -type f -iname '*.csv' -printf '%TY%Tm%Td%TH%TM%TS\t%p\n' "
+				+string(obverb?"":"2>/dev/null")+"|sort|cut -f2", obverb,oblog,&lrue,/*obsudc=*/0);
+		if (!stumm) fLog(blaus+Tx[T_Dateien_gefunden]+schwarz+ltoan(lrue.size()),1,oblog);
 		for(size_t i=0;i<lrue.size();i++) {
+			if (!geprueft) {
+				prueftbl();
+				geprueft=1;
+				eindfeld<<"id";
+			}
 			string *aktl{&lrue[i]};
 			RS nachschau(My,"SELECT Datum FROM `"+labpatel+"` WHERE name="+sqlft(My->DBS,base_name(*aktl)),aktc,ZDB);
 			if (!nachschau.obqueryfehler) {
 				char ***cerg{0};
 				if (!(cerg=nachschau.HolZeile())||!*cerg) {
-					if (!geprueft) {
-						prueftbl();
-						geprueft=1;
-					}
+					if (!stumm) fLog(Tx[T_Parse]+blaus+*aktl+schwarz,1,oblog);
 					insv reing(My,/*itab*/labpatel,aktc,/*eindeutig*/0,eindfeld,/*asy*/0,/*csets*/0);
 					/*auto*/chrono::system_clock::time_point jetzt=chrono::system_clock::now();
 					reing.hz("Name",base_name(*aktl));
@@ -324,17 +361,17 @@ void hhcl::pvirtfuehraus()
 					string zeile;
 					if (mdat.is_open()) {
 						uchar obanf{0};
-						string erstl;
-						string umw;
+						string erstl, altnn,altvn;
+						// jede Zeile der csv-Datei lesen
 						while(getasciiline(mdat,zeile)) {
-//							umw=ausg(zeile);
-							caus<<rot<<zeile<<schwarz<<endl;
-							caus<<rot<<umw<<schwarz<<endl;
+							fLog(rots+zeile+schwarz,obverb);
+//							caus<<rot<<ausg(zeile)<<schwarz<<endl;
 							char innen{0}, ch;
 							svec erg;
 							size_t i{0};
 							erg<<"";
 							while (1) {
+								// Zeilenumbrueche in Strings in '|' umwandeln
 								for(size_t i=0;i<zeile.length();i++) {
 									ch=zeile[i];
 									if (ch==10 || ch==13) {
@@ -347,15 +384,14 @@ void hhcl::pvirtfuehraus()
 										erg[erg.size()-1]+=ch; 
 										// caus<<gruen<<"ch: "<<ch<<" erg.size(): "<<erg.size()<<" erg.size()-1: "<<erg.size()-1<<" erg[erg.size()-1]: "<<erg[erg.size()-1]<<schwarz<<" innen: "<<(int)innen<<endl;
 									}
-								}
+								} // 								for(size_t i=0;i<zeile.length();i++)
 								if (!innen) break;
 								if (!getasciiline(mdat,zeile)) break;
-//								umw=ausg(zeile);
-								caus<<"i: "<<i<<" "<<rot<<zeile<<schwarz<<endl;
-							}
+								fLog("i: "+ltoan(i)+" "+rot+zeile+schwarz,obverb);
+							} // 							while (1)
 							for(size_t i=0;i<erg.size();i++) {
 								if (erg[i]!="")
-								caus<<"i: "<<i<<" "<<blau<<erg[i]<<schwarz<<endl;
+								fLog("i: "+ltoan(i)+" "+blau+erg[i]+schwarz,obverb>1);
 							}
 							insv reine(My,/*itab*/labpath,aktc,/*eindeutig*/0,eindfeld,/*asy*/0,/*csets*/0);
 							svec nteile;
@@ -371,54 +407,72 @@ void hhcl::pvirtfuehraus()
 								}
 							} else {
 								uchar obname{0},obpid{0};
-								string pid,gschl,abkue,einh;
-								RS pd(My,"SELECT COUNT(1) OVER() zl, f.pat_id, CONCAT(gesname(f.pat_id),' (',patalter(f.pat_id),')'),geschlecht FROM faelle f LEFT JOIN namen n USING (pat_id) WHERE n.nachname='"+nteile[nteile.size()-1]+"' AND n.vorname LIKE '"+nteile[0]+"%' AND BhFB<STR_TO_DATE('"+erstl+"','%d.%m.%Y') AND (BhFE1>ADDDATE(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),-4) OR BhFE1=18991230) GROUP BY f.pat_id;",aktc,ZDB);
+								string pid,gschl,abkue,einh,wert,mfmg,hinw;
+								double vorwert;
+								long hinwsp{0};
+								if (nteile[nteile.size()-1]!=altnn || nteile[0]!=altvn) {
+									altnn=nteile[nteile.size()-1];
+									altvn=nteile[0];
+									if (!stumm) fLog(Tx[T_Patient]+blaus+altnn+", "+altvn+schwarz,1,oblog);
+								}
+								RS pd(My,"SELECT COUNT(1) OVER() zl, f.pat_id, CONCAT(gesname(f.pat_id),' (',patalter(f.pat_id),')'),geschlecht,patalter(f.pat_id) "
+										"FROM faelle f "
+										"LEFT JOIN namen n USING (pat_id) "
+										"WHERE n.nachname='"+ersetzAllezu(altnn,"'","''")+"' AND n.vorname LIKE '"+altvn+"%' "
+										  "AND BhFB<STR_TO_DATE('"+erstl+"','%d.%m.%Y') AND (BhFE1>ADDDATE(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),-4) OR BhFE1=18991230) "
+											"GROUP BY f.pat_id;",aktc,ZDB);
 								if (!pd.obqueryfehler) {
-									char ***cerg{0};
-									while (cerg=pd.HolZeile(),cerg?*cerg:0) {
-										if (!strcmp(cjj(cerg,0),"1")) {
-											pid=cjj(cerg,1);
-											reine.hz("Pat_id",cjj(cerg,1));
-											obpid=1;
-											if (cerg[2]) {
-												reine.hz("Name",cjj(cerg,2));
+									char ***ferg{0};
+									long palter{0};
+									while (ferg=pd.HolZeile(),ferg?*ferg:0) {
+										palter=atol(cjj(ferg,4));
+										if (!strcmp(cjj(ferg,0),"1")) {
+											pid=cjj(ferg,1);
+											reine.hz("Pat_id",cjj(ferg,1));
+											if (ferg[2]) {
+												reine.hz("Name",cjj(ferg,2));
 												obname=1;
 											}
-											if (cerg[3]) gschl=cjj(cerg,3);
-										} else if (strcmp(cjj(cerg,0),"0")) { // mehrere Patienten gefunden
-											RS npid(My,"SELECT COUNT(1) OVER() zl, f.pat_id, CONCAT(gesname(f.pat_id),' (',patalter(f.pat_id),')'),geschlecht "
+											if (ferg[3]) gschl=cjj(ferg,3);
+										} else if (strcmp(cjj(ferg,0),"0")) { // mehrere Patienten gefunden
+											RS npid(My,"SELECT COUNT(1) OVER() zl, l.pat_id, CONCAT(gesname(l.pat_id),' (',patalter(l.pat_id),')'),geschlecht "
 													"FROM labor2a l LEFT JOIN namen n USING(pat_id)"
-													"WHERE l.pat_id IN (SELECT GROUP_CONCAT(pat_id SEPARATOR ',') FROM namen WHERE TRIM(CONCAT(titel,' ',vorname,' ',nvors, if(nvors='','',' '),nachname)) = '"+nteile[nteile.size()-1]+"')"
-													"AND zeitpunkt BETWEEEN DATE_SUB(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),INTERVAL 7 DAY) AND DATE_ADD(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),INTERVAL 1 DAY) ORDER BY zeitpunkt DESC",aktc,ZDB); 
+													"WHERE l.pat_id IN (SELECT pat_id FROM namen "
+													                    "WHERE TRIM(CONCAT(titel,' ',vorname,' ',nvors, if(nvors='','',' '),nachname)) = "
+																							            "'"+nteile[nteile.size()-1]+"')"
+                       													"AND zeitpunkt BETWEEN DATE_SUB(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),INTERVAL 7 DAY) "
+											   		                        "AND DATE_ADD(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),INTERVAL 1 DAY) "
+												  "ORDER BY zeitpunkt DESC",aktc,ZDB); 
 											if (!npid.obqueryfehler) {
-												char ***cerg{0};
-												while (cerg=npid.HolZeile(),cerg?*cerg:0) {
-													if (!strcmp(cjj(cerg,0),"1")) {
-														pid=cjj(cerg,1);
-														reine.hz("Pat_id",cjj(cerg,1));
-														obpid=1;
-														if (cerg[2]) {
-															reine.hz("Name",cjj(cerg,2));
+												char ***lerg{0};
+												while (lerg=npid.HolZeile(),lerg?*lerg:0) {
+													if (!strcmp(cjj(lerg,0),"1")) {
+														pid=cjj(lerg,1);
+														reine.hz("Pat_id",cjj(lerg,1));
+														if (lerg[2]) {
+															reine.hz("Name",cjj(lerg,2));
 															obname=1;
 														}
-														if (cerg[3]) gschl=cjj(cerg,3);
-													} // 													if (!strcmp(cjj(cerg,0),"1"))
+														if (lerg[3]) gschl=cjj(lerg,3);
+													} // 													if (!strcmp(cjj(lerg,0),"1"))
 													break;
-												} // 												while (cerg=npid.HolZeile(),cerg?*cerg:0)
+												} // 												while (lerg=npid.HolZeile(),lerg?*lerg:0)
 											} // if (!npid.obqueryfehler)
-										} // if (!strcmp(cjj(cerg,0),"1")) ... else if (strcmp(cjj(cerg,0),"0"))
+										} // if (!strcmp(cjj(ferg,0),"1")) ... else if (strcmp(cjj(ferg,0),"0"))
+										obpid=(pid!="");
 										break;
-									} // 									while (cerg=pd.HolZeile(),cerg?*cerg:0)
+									} // 									while (ferg=pd.HolZeile(),ferg?*ferg:0)
 									if (!obname)
 										reine.hz("Name",erg[0]);
 									reine.hz("elID",datid);
 									size_t p1,p2,p3,p4;
-									uchar pl{3},oblh{0};
+									uchar pz{2},oblh{0};
 									if ((p1=erg[1].find(':'))!=string::npos) {
 										abkue=erg[1].substr(0,p1);
 										reine.hz("Parameter",abkue);
 										if ((p2=erg[1].find(' ',p1))!=string::npos) {
-											reine.hz("Wert",erg[1].substr(p1+1,p2-p1-1));
+											wert=erg[1].substr(p1+1,p2-p1-1);
+											reine.hz("Wert",wert);
 											if ((p3=erg[1].find('(',p2))!=string::npos) {
 												einh=erg[1].substr(p2+1,p3-p2-2);
 												reine.hz("Einheit",einh);
@@ -430,45 +484,216 @@ void hhcl::pvirtfuehraus()
 													}
 												p4=erg[1].find(" / ",p3);
 												if (p4==string::npos) {
-													p4=erg[1].find(")",p3);
-													pl=1;
+													p4=erg[1].rfind(")");
+													pz=1;
 												}
 												if (p4!=string::npos) {
-													reine.hz(oblh?"Labhinw":"Normbereich",erg[1].substr(p3+(oblh?1:pl),p4-p3-(oblh?pl:1)));
+													reine.hz(oblh?"Labhinw":"Normbereich",erg[1].substr(p3+1,p4-p3-(oblh?pz:1)));
 												}
 												if (!oblh)
 													reine.hz("Labhinw","");
-											}
-										}
+											} // 											if ((p3=erg[1].find('(',p2))!=string::npos)
+										} // 										if ((p2=erg[1].find(' ',p1))!=string::npos)
 									} // 									if ((p1=erg[1].find(':'))!=string::npos)
 									if (obpid) {
-										RS tm(My,"SELECT TRIM(GROUP_CONCAT(CONCAT(DATE_FORMAT(zp,'%d.%m.%y'),' ',LEFT(raum,3)) ORDER BY zp SEPARATOR '  ')) term FROM termine t WHERE zp >= date(now()) AND pid = "+pid,aktc,ZDB);
-										if (!tm.obqueryfehler) {
-											char ***cerg{0};
-											while (cerg=tm.HolZeile(),cerg?*cerg:0) {
-												reine.hz("Termine",cjj(cerg,0));
+										RS fb(My,"SELECT "
+												" CASE "
+												"  WHEN TKZ<>0 AND GSZ=0 AND WDZ=0 THEN 14772545 "//vbmittelblau, RGB(65, 105, 225) ' http://www.am.uni-duesseldorf.de/de/Links/Tools/farbtabelle.html
+												"  WHEN tkz=0 AND gsz<>0 AND wdz=0 THEN 65535 " // gelb, &HFFFF&
+												"  WHEN tkz=0 AND gsz=0 AND wdz<>0 THEN 6974207 " // vbwagnerrot, RGB(255,106,106), 
+												"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 THEN 7451452 " // vbwagnergrün, RGB(60,179,113)
+												"  WHEN tkz<>0 AND gsz=0 AND wdz<>0 THEN 13850042 "// vbmittellila, rgb(186,85,211)
+												"  WHEN tkz=0 AND gsz<>0 AND wdz<>0 THEN 33023 " // orange, &H80FF&
+												"  WHEN tkz<>0 AND gsz<>0 AND wdz<>0 THEN 755384 " // vbmittelbraun, RGB(184,134,11)
+												"  ELSE 0 "
+												" END namsp,"
+												" CASE "
+												"  WHEN TKZ<>0 AND GSZ=0 AND WDZ=0 THEN 16767449 " // hellblau, &HFFD9D9
+												"  WHEN tkz=0 AND gsz<>0 AND wdz=0 THEN 12648447 "// vbhellgelb, &HC0FFFF
+												"  WHEN tkz=0 AND gsz=0 AND wdz<>0 THEN 12632319 "// mittigrosa, &HC0C0FF
+												"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 THEN 8454016 "// vbhellgrün, &H80FF80
+												"  WHEN tkz<>0 AND gsz=0 AND wdz<>0 THEN 14053594 "// vbhelllila, rgb(218,112,214)
+												"  WHEN tkz=0 AND gsz<>0 AND wdz<>0 THEN 8438015 "// hellorange &H80C0FF
+												"  WHEN tkz<>0 AND gsz<>0 AND wdz<>0 THEN 2139610 "// hellbraun RGB(218,165,32)
+												"  ELSE 0 "
+												" END wertsp "
+												"FROM (SELECT "
+												"SUM(art='gs' OR inhalt LIKE '%(gs)%') gsz,"
+												"SUM(art='tk' OR inhalt LIKE '%(tk)%') tkz,"
+												"SUM(art='wd' OR inhalt LIKE '%(wd)%') wdz "
+												"FROM ( SELECT art,inhalt "
+												" FROM eintraege WHERE (art in ('tk','gs','wd') OR inhalt RLIKE '\\((gs|tk|wd)\\)') AND pat_id="+pid+
+												" ORDER BY zeitpunkt DESC LIMIT 7 "
+												") i) i",aktc,ZDB);
+										if (!fb.obqueryfehler) {
+											char ***eerg{0};
+											while (eerg=fb.HolZeile(),eerg?*eerg:0) {
+												reine.hz("namsp",cjj(eerg,0));
+												reine.hz("wertsp",cjj(eerg,1));
 												break;
 											}
-										}
+										} // 										if (!fb.obqueryfehler)
+
+										RS tm(My,"SELECT TRIM(GROUP_CONCAT(CONCAT(DATE_FORMAT(zp,'%d.%m.%y'),' ',LEFT(raum,3)) "
+												     "ORDER BY zp SEPARATOR '  ')) term FROM termine t WHERE zp >= date(now()) AND pid = "+pid,aktc,ZDB);
+										if (!tm.obqueryfehler) {
+											char ***terg{0};
+											while (terg=tm.HolZeile(),terg?*terg:0) {
+												reine.hz("Termine",cjj(terg,0));
+												break;
+											}
+										} // 										if (!tm.obqueryfehler)
 
 										RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü='"+abkue+"' AND einheit='"+einh+"' "
-												      "AND zeitpunkt<=SUBDATE(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),1) GROUP BY zeitpunkt DESC LIMIT 2\")",aktc,2);
+												      "AND zeitpunkt<=STR_TO_DATE('"+erstl+"','%d.%m.%Y') GROUP BY zeitpunkt DESC LIMIT 3\")",aktc,ZDB);
 										if (!llb.obqueryfehler) {
-											char ***cerg{0};
-											cerg=llb.HolZeile(); if (cerg?*cerg:0) reine.hz("Vorwert_1",cjj(cerg,0));
-											cerg=llb.HolZeile(); if (cerg?*cerg:0) reine.hz("Vorwert_2",cjj(cerg,0));
+											char ***gerg{0};
+											gerg=llb.HolZeile(); 
+											gerg=llb.HolZeile(); if (gerg?*gerg:0) {
+												vorwert=atof(cjj(gerg,0));
+												reine.hz("Vorwert_1",cjj(gerg,0));
+											}
+											gerg=llb.HolZeile(); if (gerg?*gerg:0) reine.hz("Vorwert_2",cjj(gerg,0));
+										} // 										if (!llb.obqueryfehler)
+									} // 									if (obpid)
+									const long iwert{atol(wert.c_str())};
+									if (iinstr(abkue,string("gfr"))!=-1 || iinstr(abkue,string("gfc"))!=-1 || iinstr(abkue,string("mdrd"))!=-1) {
+										if (obpid) {
+											RS mf(My,"SELECT COALESCE(("
+													" SELECT"
+													" IF(INSTR(lmp.medikament,'500')<>0,500,IF(INSTR(lmp.medikament,'850')<>0,850,IF(INSTR(lmp.medikament,'iquid'),200,1000)))*"
+													" (REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(mo,',','.'),'½','.5'),'¼','.25'),'1/2','.5'),' ','')+"
+													" REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(mi,',','.'),'½','.5'),'¼','.25'),'1/2','.5'),' ','')+"
+													" REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(nm,',','.'),'½','.5'),'¼','.25'),'1/2','.5'),' ','')+"
+													" REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(ab,',','.'),'½','.5'),'¼','.25'),'1/2','.5'),' ','')+"
+													" REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(zn,',','.'),'½','.5'),'¼','.25'),'1/2','.5'),' ','')"
+													" ) summe"
+													" FROM lmp LEFT JOIN medarten ma ON ma.Medikament=lmp.medanfang"
+													" WHERE lmp.pat_id="+pid+" AND metf<>0"
+													" GROUP BY lmp.pat_id"
+													"),0) mfmg;",aktc,ZDB);
+											if (!mf.obqueryfehler) {
+												char ***cerg{0};
+												while (cerg=mf.HolZeile(),cerg?*cerg:0) {
+													mfmg=cjj(cerg,0);
+													break;
+												}
+											} // 										if (!mf.obqueryfehler)
+											const long imf{atol(mfmg.c_str())};
+											if ((iwert<45 && imf)||(iwert<60 && imf>1000)) {
+												hinw+="eGFR <-> "+mfmg+" mg Metformin/d!";
+												hinwsp=255; // vbred
+											}
+										} // obpid
+									} else if (iinstr(abkue,string("ck"))!=-1) {
+                    if (iwert>999) {
+											hinw="CK hoch";
+											hinwsp=255;
 										}
+									} else if (iinstr(abkue,string("tsh"))!=-1 || iinstr(abkue,string("tsbf"))!=-1|| iinstr(abkue,string("tsbl"))!=-1) {
+										if (iwert>(palter<25?2.5:palter>65?8:5)||iwert<0.25) {
+											if (iwert<0.25) {
+												hinw="V.a. zu viel SD-Hormon";
+												hinwsp=255;
+											} else {
+												hinw="mögl.unzur.SD-Substitution";
+												hinwsp=255;
+											}
+											if (obpid) {
+												RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü='fT4' GROUP BY zeitpunkt DESC LIMIT 1\")",aktc,ZDB);
+												char ***gerg{0};
+												if (!llb.obqueryfehler) {
+													gerg=llb.HolZeile();
+													if (gerg?*gerg:0) {
+														hinw+=" (";
+														hinw+=cjj(gerg,1); // fT4
+														hinw+=" ";
+														hinw+=cjj(gerg,0); // (wert)
+														hinw+=" ";
+														hinw+=cjj(gerg,2); // pmol/l
+														hinw+=" ";
+														hinw+=cjj(gerg,3)[8]; // 2021-04-29
+														hinw+=cjj(gerg,3)[9]; // 2021-04-29
+														hinw+='.';
+														hinw+=cjj(gerg,3)[5]; // 2021-04-29
+														hinw+=cjj(gerg,3)[6]; // 2021-04-29
+														hinw+='.';
+														hinw+=")";
+													}
+												}
+											}
+										} // 										if (iwert>(palter<25?2.5:palter>65?8:5)||iwert<0.25)
+									} else if (iinstr(abkue,string("ft4"))!=-1) {
+										if (iwert<12||iwert>22) {
+											if (iwert>22) {
+												hinw="V.a. zu viel SD-Hormon";
+												hinwsp=255;
+											} else {
+												hinw="V.a. zu wenig SD-Hormon";
+												hinwsp=255;
+											}
+											if (obpid) {
+												RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü IN ('TSH','TSBF','TSBL') GROUP BY zeitpunkt DESC LIMIT 1\")",aktc,ZDB);
+												char ***gerg{0};
+												if (!llb.obqueryfehler) {
+													gerg=llb.HolZeile();
+													if (gerg?*gerg:0) {
+														hinw+=" (TSH "; // cjj(gerg,1); // TSH
+														hinw+=cjj(gerg,0); // (wert)
+														hinw+=" ";
+														hinw+=cjj(gerg,2); // IU/ml
+														hinw+=" ";
+														hinw+=cjj(gerg,3)[8]; // 2021-04-29
+														hinw+=cjj(gerg,3)[9]; // 2021-04-29
+														hinw+='.';
+														hinw+=cjj(gerg,3)[5]; // 2021-04-29
+														hinw+=cjj(gerg,3)[6]; // 2021-04-29
+														hinw+='.';
+														hinw+=")";
+													}
+												}
+											}
+										}
+									} else if (abkue=="k" || abkue=="K") {
+										if (iwert<3.5 ||iwert>5.5) {
+											hinw="V.a. Dyskaliämie";
+											hinwsp=255;
+										}
+									} else if (abkue=="HB") {
+										int obm{strcmp(cjj(ferg,3),"w")};
+									  if (vorwert!=0 && vorwert-atof(wert.c_str())>1.5) {
+											hinw="Hb-Abfall!";
+											hinwsp=255;
+										} else if ((obm&&iwert<13.5)||iwert<11.5) {
+											hinw="V.a. Anämie";
+											hinwsp=255;
+											if (obpid) {
+												RS an(My,"SELECT icd FROM `diagnosen` d WHERE d.pat_id = "+pid+" AND d.diagtext LIKE '%anämie%' "
+														"AND d.diagsicherheit NOT IN ('A','Z') AND COALESCE(d.f6010,0)=0 AND d.obdauer<>0",aktc,ZDB);
+												if (!an.obqueryfehler) {
+													char ***cerg{0};
+													while (cerg=an.HolZeile(),cerg?*cerg:0) {
+														break;
+													}
+													if (cerg) hinwsp=33023; // orange
+												}
+											}
+										}
+									} // 									} else if (abkue=="HB")
+									if (hinw!="") {
+										reine.hz("Hinweise",hinw);
+										reine.hz("hinwsp",hinwsp);
 									}
 									reine.schreib(/*sammeln*/0,/*obverb*/obverb,/*idp*/0);
 								} // 								if (!pd.obqueryfehler)
-							}
-						}
-					}
-				}
-			}
-		}
+							} // 							if (!obanf) else if else
+						} // 						while(getasciiline(mdat,zeile))
+					} // 					if (mdat.is_open())
+				} // 				if (!(cerg=nachschau.HolZeile())||!*cerg)
+			} // 			if (!nachschau.obqueryfehler)
+		} // 		for(size_t i=0;i<lrue.size();i++)
 	} // 		else if (!loeschalle && !loeschunvollst && umben.empty())
-	fLog(blaus+Tx[T_fertig]+schwarz,1,oblog);
+	fLog(blaus+Tx[T_fertig]+schwarz,obverb,oblog);
 	ZDB=altZDB;
 } // void hhcl::pvirtfuehraus  //α
 
