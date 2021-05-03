@@ -1287,7 +1287,7 @@ uchar DB::tuerweitern(const string& tabs, const string& feld,unsigned long wleng
               (!strcasecmp(*(*cerg+2),"yes")?"NULL":"NOT NULL")<<" "<<string("DEFAULT ")+cjj(cerg,3)<<
               " COMMENT '"<<ersetzAllezu(cjj(cerg,4),"'","\\'")<<"'";
             RS spaltaend(this,korr.str(),aktc,obverb);
-            if (spaltaend.fnr==1074) {
+            if (spaltaend.fnr==1074 || spaltaend.fnr==1118) {
               korr.str(std::string()); korr.clear();
               string neufeld;
               if (!strcasecmp(*(*cerg+1),"binary")) neufeld="mediumblob";
