@@ -588,7 +588,7 @@ void hhcl::pvirtfuehraus()
 												}
 											} // 										if (!mf.obqueryfehler)
 											const long imf{atol(mfmg.c_str())};
-											if ((iwert<45 && imf)||(iwert<60 && imf>1000)) {
+											if ((iwert<30 && imf)||(iwert<45 && imf>1000)) {
 												hinw+="eGFR <-> "+mfmg+" mg Metformin/d!";
 												hinwsp=255; // vbred
 											}
