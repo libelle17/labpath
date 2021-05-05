@@ -471,7 +471,7 @@ void hhcl::pvirtfuehraus()
 									if ((p1=erg[1].find(':'))!=string::npos) {
 										abkue=erg[1].substr(0,p1);
 										reine.hz("Parameter",abkue);
-										if ((p2=erg[1].find(' ',p1+2))!=string::npos) {
+										if ((p2=erg[1].find(' ',p1+2))!=string::npos) { // MAK: |<600
 											if (erg[1][p1+1]==' ') p1++;
 											if (erg[1][p1+1]=='|') p1++;
 											wert=erg[1].substr(p1+1,p2-p1-1);
