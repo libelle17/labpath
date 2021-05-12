@@ -40,6 +40,8 @@ enum T_
 	T_Patient,
 	T_namsp,
 	T_wertsp,
+	T_hinwsp,
+	T_termsp,
 	T_MAX //α
 }; // enum T_ //ω
 //α
