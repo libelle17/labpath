@@ -532,29 +532,33 @@ void hhcl::pvirtfuehraus()
 													if (obpid) {
 														RS fb(My,"SELECT "
 																" CASE "
-																"  WHEN TKZ<>0 AND GSZ=0 AND WDZ=0 THEN 14772545 "//vbmittelblau, RGB(65, 105, 225) ' http://www.am.uni-duesseldorf.de/de/Links/Tools/farbtabelle.html
-																"  WHEN tkz=0 AND gsz<>0 AND wdz=0 THEN 65535 " // gelb, &HFFFF&
+																"  WHEN TKZ<>0 AND GSZ=0 AND wdz=0 AND ahz=0 THEN 14772545 "//vbmittelblau, RGB(65, 105, 225) ' http://www.am.uni-duesseldorf.de/de/Links/Tools/farbtabelle.html
+																
+																"  WHEN tkz=0 AND gsz<>0 AND wdz=0 AND ahz=0 THEN 65535 " // gelb, &HFFFF&
+																"  WHEN tkz=0 AND gsz=0 AND ahz<>0 THEN 8553215 " // vbwagnerahrot, RGB(255,130,130), 
 																"  WHEN tkz=0 AND gsz=0 AND wdz<>0 THEN 6974207 " // vbwagnerrot, RGB(255,106,106), 
-																"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 THEN 7451452 " // vbwagnergrün, RGB(60,179,113)
-																"  WHEN tkz<>0 AND gsz=0 AND wdz<>0 THEN 13850042 "// vbmittellila, rgb(186,85,211)
-																"  WHEN tkz=0 AND gsz<>0 AND wdz<>0 THEN 33023 " // orange, &H80FF&
-																"  WHEN tkz<>0 AND gsz<>0 AND wdz<>0 THEN 755384 " // vbmittelbraun, RGB(184,134,11)
-																"  ELSE 16777215 "
+																"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 and ahz<>0 THEN 7451452 " // vbwagnergrün, RGB(60,179,113)
+																"  WHEN tkz<>0 AND gsz=0 AND (wdz<>0 OR ahz<>0) THEN 13850042 "// vbmittellila, rgb(186,85,211)
+																"  WHEN tkz=0 AND gsz<>0 AND (wdz<>0 OR ahz<>0) THEN 33023 " // orange, &H80FF&
+																"  WHEN tkz<>0 AND gsz<>0 AND (wdz<>0 OR ahz<>0) THEN 755384 " // vbmittelbraun, RGB(184,134,11)
+																"  ELSE 16777215 " // FFFFFF
 																" END namsp,"
 																" CASE "
-																"  WHEN TKZ<>0 AND GSZ=0 AND WDZ=0 THEN 16767449 " // hellblau, &HFFD9D9
-																"  WHEN tkz=0 AND gsz<>0 AND wdz=0 THEN 12648447 "// vbhellgelb, &HC0FFFF
+																"  WHEN TKZ<>0 AND GSZ=0 AND WDZ=0 and ahz=0 THEN 16767449 " // hellblau, &HFFD9D9
+																"  WHEN tkz=0 AND gsz<>0 AND wdz=0 and ahz=0 THEN 12648447 "// vbhellgelb, &HC0FFFF
+																"  WHEN tkz=0 AND gsz=0 AND ahz<>0 THEN 16765610 "// mittigahrosa, &HFFD2AA 
 																"  WHEN tkz=0 AND gsz=0 AND wdz<>0 THEN 12632319 "// mittigrosa, &HC0C0FF
-																"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 THEN 8454016 "// vbhellgrün, &H80FF80
-																"  WHEN tkz<>0 AND gsz=0 AND wdz<>0 THEN 14053594 "// vbhelllila, rgb(218,112,214)
-																"  WHEN tkz=0 AND gsz<>0 AND wdz<>0 THEN 8438015 "// hellorange &H80C0FF
-																"  WHEN tkz<>0 AND gsz<>0 AND wdz<>0 THEN 2139610 "// hellbraun RGB(218,165,32)
+																"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 and ahz=0 THEN 8454016 "// vbhellgrün, &H80FF80
+																"  WHEN tkz<>0 AND gsz=0 AND (wdz<>0 or ahz<>0) THEN 14053594 "// vbhelllila, rgb(218,112,214)
+																"  WHEN tkz=0 AND gsz<>0 AND (wdz<>0 or ahz<>0) THEN 8438015 "// hellorange &H80C0FF
+																"  WHEN tkz<>0 AND gsz<>0 AND (wdz<>0 or ahz<>0) THEN 2139610 "// hellbraun RGB(218,165,32)
 																"  ELSE 16777215 "
 																" END wertsp "
 																"FROM (SELECT "
 																"SUM(art='gs' OR inhalt LIKE '%(gs)%') gsz,"
 																"SUM(art='tk' OR inhalt LIKE '%(tk)%') tkz,"
 																"SUM(art='wd' OR inhalt LIKE '%(wd)%') wdz "
+																"SUM(art='ah' OR inhalt LIKE '%(ah)%') ahz "
 																"FROM ( SELECT art,inhalt "
 																" FROM eintraege WHERE (art in ('tk','gs','wd') OR inhalt RLIKE '\\((gs|tk|wd)\\)') AND pat_id="+pid+
 																" ORDER BY zeitpunkt DESC LIMIT 7 "
@@ -570,17 +574,18 @@ void hhcl::pvirtfuehraus()
 
 														RS tm(My,"SELECT term"
 																", CASE "
-																"  WHEN TKZ<>0 AND GSZ=0 AND WDZ=0 THEN 16767449 " // hellblau, &HFFD9D9
-																"  WHEN tkz=0 AND gsz<>0 AND wdz=0 THEN 12648447 "// vbhellgelb, &HC0FFFF
+																"  WHEN TKZ<>0 AND GSZ=0 AND WDZ=0 and ahz=0 THEN 16767449 " // hellblau, &HFFD9D9
+																"  WHEN tkz=0 AND gsz<>0 AND wdz=0 and ahz=0 THEN 12648447 "// vbhellgelb, &HC0FFFF
+																"  WHEN tkz=0 AND gsz=0 AND ahz<>0 THEN 16765610 "// mittigahrosa, &HFFD2AA 
 																"  WHEN tkz=0 AND gsz=0 AND wdz<>0 THEN 12632319 "// mittigrosa, &HC0C0FF
-																"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 THEN 8454016 "// vbhellgrün, &H80FF80
-																"  WHEN tkz<>0 AND gsz=0 AND wdz<>0 THEN 14053594 "// vbhelllila, rgb(218,112,214)
-																"  WHEN tkz=0 AND gsz<>0 AND wdz<>0 THEN 8438015 "// hellorange &H80C0FF
-																"  WHEN tkz<>0 AND gsz<>0 AND wdz<>0 THEN 2139610 "// hellbraun RGB(218,165,32)
+																"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 and ahz=0 THEN 8454016 "// vbhellgrün, &H80FF80
+																"  WHEN tkz<>0 AND gsz=0 AND (wdz<>0 or ahz<>0) THEN 14053594 "// vbhelllila, rgb(218,112,214)
+																"  WHEN tkz=0 AND gsz<>0 AND (wdz<>0 or ahz<>0) THEN 8438015 "// hellorange &H80C0FF
+																"  WHEN tkz<>0 AND gsz<>0 AND (wdz<>0 or ahz<>0) THEN 2139610 "// hellbraun RGB(218,165,32)
 																"  ELSE 16777215 "
 																" END termsp "
 																"FROM (SELECT term "
-																",INSTR(term,' kot')<>0 tkz,INSTR(term,' sch')<>0 gsz,INSTR(term,' wag')<>0 wdz "
+																",INSTR(term,' kot')<>0 tkz,INSTR(term,' sch')<>0 gsz,INSTR(term,' wag')<>0 wdz,INSTR(term,' ham')<>0 ahz "
 																"FROM (SELECT TRIM(GROUP_CONCAT(CONCAT(DATE_FORMAT(zp,'%d.%m.%y'),' ',LEFT(raum,3)) ORDER BY zp SEPARATOR '  ')) term "
 																"FROM termine t WHERE zp >= date(now()) AND pid = "+pid+") i) i",aktc,ZDB);
 														if (!tm.obqueryfehler) {
