@@ -557,7 +557,7 @@ void hhcl::pvirtfuehraus()
 																"FROM (SELECT "
 																"SUM(art='gs' OR inhalt LIKE '%(gs)%') gsz,"
 																"SUM(art='tk' OR inhalt LIKE '%(tk)%') tkz,"
-																"SUM(art='wd' OR inhalt LIKE '%(wd)%') wdz "
+																"SUM(art='wd' OR inhalt LIKE '%(wd)%') wdz,"
 																"SUM(art='ah' OR inhalt LIKE '%(ah)%') ahz "
 																"FROM ( SELECT art,inhalt "
 																" FROM eintraege WHERE (art in ('tk','gs','wd') OR inhalt RLIKE '\\((gs|tk|wd)\\)') AND pat_id="+pid+
