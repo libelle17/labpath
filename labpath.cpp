@@ -537,7 +537,7 @@ void hhcl::pvirtfuehraus()
 																"  WHEN tkz=0 AND gsz<>0 AND wdz=0 AND ahz=0 THEN 65535 " // gelb, &HFFFF&
 																"  WHEN tkz=0 AND gsz=0 AND ahz<>0 THEN 8553215 " // vbwagnerahrot, RGB(255,130,130), 
 																"  WHEN tkz=0 AND gsz=0 AND wdz<>0 THEN 6974207 " // vbwagnerrot, RGB(255,106,106), 
-																"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 and ahz<>0 THEN 7451452 " // vbwagnergrün, RGB(60,179,113)
+																"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 and ahz=0 THEN 7451452 " // vbwagnergrün, RGB(60,179,113)
 																"  WHEN tkz<>0 AND gsz=0 AND (wdz<>0 OR ahz<>0) THEN 13850042 "// vbmittellila, rgb(186,85,211)
 																"  WHEN tkz=0 AND gsz<>0 AND (wdz<>0 OR ahz<>0) THEN 33023 " // orange, &H80FF&
 																"  WHEN tkz<>0 AND gsz<>0 AND (wdz<>0 OR ahz<>0) THEN 755384 " // vbmittelbraun, RGB(184,134,11)
@@ -560,7 +560,7 @@ void hhcl::pvirtfuehraus()
 																",SUM(art='wd' OR inhalt LIKE '%(wd)%') wdz"
 																",SUM(art='ah' OR inhalt LIKE '%(ah)%') ahz "
 																"FROM ( SELECT art,inhalt "
-																" FROM eintraege WHERE (art in ('tk','gs','wd') OR inhalt RLIKE '\\((gs|tk|wd)\\)') AND pat_id="+pid+
+																" FROM eintraege WHERE (art in ('tk','gs','wd','ah') OR inhalt RLIKE '\\((gs|tk|wd|ah)\\)') AND pat_id="+pid+
 																" ORDER BY zeitpunkt DESC LIMIT 7 "
 																") i) i",aktc,ZDB);
 														if (!fb.obqueryfehler) {
