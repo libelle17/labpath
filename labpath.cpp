@@ -811,7 +811,7 @@ void hhcl::pvirtfuehraus()
 															} //										if (vorwert!=0 && vorwert-iwert>1.5)    else if
 															// 8. Harnsäure
 														} else if (abkue=="HS") {
-															if (iwert>7) {
+															if (obpid && iwert>7) {
 																	if (ficd!="") ficd+=',';
 																	ficd+="E79.0";
 																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E79.0' AND obdauer<>0",aktc,ZDB);
@@ -827,7 +827,7 @@ void hhcl::pvirtfuehraus()
 															// 9. Cholesterin
 														} else if (abkue=="LDLB"||abkue=="LDLMG"||abkue=="LDLH01"||abkue=="LDL") {
 															const int obs{strcmp(cjj(ferg,5),"0")};
-															if (!obs && iwert>140) {
+															if (obpid && !obs && iwert>140) {
 																	if (ficd!="") ficd+=',';
 																	ficd+="E78.0";
 																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E78' AND obdauer<>0",aktc,ZDB);
