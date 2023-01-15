@@ -370,7 +370,7 @@ void hhcl::pvirtfuehraus()
 			if (!nachschau.obqueryfehler) {
 				char ***cerg{0};
 				if (!(cerg=nachschau.HolZeile())||!*cerg) {
-					if (!stumm) fLog(Tx[T_Parse]+blaus+*aktl+schwarz,1,oblog);
+					if (!stumm) fLog(Tx[T_Parse]+violetts+*aktl+schwarz,1,oblog);
 					insv reing(My,/*itab*/labpatel,aktc,/*eindeutig*/0,eindfeld,/*asy*/0,/*csets*/0);
 					/*auto*/chrono::system_clock::time_point jetzt=chrono::system_clock::now();
           struct stat dstat{0};
