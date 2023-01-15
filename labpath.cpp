@@ -456,9 +456,11 @@ void hhcl::pvirtfuehraus()
 										for(unsigned aru=0;aru<2;aru++) {
 											// <<rot<<"           aru: "<<violett<<aru<<schwarz<<endl;
 											if (aru) {vname=nname;nname=altvn;} else {nname=ersetzAllezu(altnn,"'","''");vname=altvn;}
-											RS pd(My,"SELECT COUNT(1) OVER() zl, f.pat_id, CONCAT(gesname(f.pat_id),' (',patalter(f.pat_id),')'),geschlecht,patalter(f.pat_id) "
+											RS pd(My,"SELECT COUNT(1) OVER() zl, f.pat_id, CONCAT(gesname(f.pat_id),' (',patalter(f.pat_id),')'),geschlecht"
+													",patalter(f.pat_id),COALESCE(s.voret,0) voret "
 													"FROM faelle f "
 													"LEFT JOIN namen n USING (pat_id) "
+													"LEFT JOIN sws s ON s.pat_id=p.pat_id AND s.voret>f.qanf"
 													"WHERE n.nachname='"+nname+"' AND n.vorname LIKE '"+vname+"%' "
 													"AND BhFB<STR_TO_DATE('"+erstl+"','%d.%m.%Y') AND "
 													"(BhFE1>ADDDATE(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),-"+itv+") OR BhFE1=18991230) "
@@ -782,7 +784,7 @@ void hhcl::pvirtfuehraus()
 															}
 															// 7. Hämoglobin
 														} else if (abkue=="HB") {
-															int obm{strcmp(cjj(ferg,3),"w")};
+															const int obm{strcmp(cjj(ferg,3),"w")};
 															if (vorwert!=0 && vorwert-iwert>1.5) {
 																hinw="Hb-Abfall!";
 																hinwsp=255;
@@ -813,6 +815,22 @@ void hhcl::pvirtfuehraus()
 																	if (ficd!="") ficd+=',';
 																	ficd+="E79.0";
 																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E79.0' AND obdauer<>0",aktc,ZDB);
+																	if (!hs.obqueryfehler) {
+																		const char *const *const *const lerg{hs.HolZeile()};
+																		if (lerg) {
+																			if (ficdsp!=255) ficdsp=33023; // orange
+																		} else {
+																			ficdsp=255;
+																		}
+																	} // 	if (!ni.obqueryfehler)
+															}
+															// 9. Cholesterin
+														} else if (abkue=="LDLB"||abkue=="LDLMG"||abkue=="LDLH01"||abkue=="LDL") {
+															const int obs{strcmp(cjj(ferg,5),"0")};
+															if (!obs && iwert>140) {
+																	if (ficd!="") ficd+=',';
+																	ficd+="E78.0";
+																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E78' AND obdauer<>0",aktc,ZDB);
 																	if (!hs.obqueryfehler) {
 																		const char *const *const *const lerg{hs.HolZeile()};
 																		if (lerg) {
