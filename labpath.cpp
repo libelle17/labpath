@@ -195,7 +195,7 @@ void hhcl::prueflpatel(DB *My, const size_t aktc, const int obverb, const int ob
 			Feld("Pfad","varchar","100","",Tx[T_Pfad],0,0,1),
 			Feld("Name","varchar","100","",Tx[T_Name],0,0,1),
 			Feld("Größe","int","12","",Tx[T_Groesse],0,0,1),
-			Feld("Änderungsdatum","date","",Tx[T_Aenderungsdatum],0,0,1),
+			Feld("Änderungsdatum","datetime","0","0",Tx[T_Aenderungsdatum],0,0,1),
 			Feld("fertig","bit","","",Tx[T_dfertig],0,0,1),
 		};
 		Feld ifelder1[] = {Feld("Datum")};   Index i1("Datum",ifelder1,elemzahl(ifelder1));
@@ -382,7 +382,7 @@ void hhcl::pvirtfuehraus()
 						reing.hz("Name",base_name(*aktl));
 						reing.hz("Pfad",dir_name(*aktl));
 						reing.hz("Datum",&jetzt);
-						reing.hz("Größe",&groesse);
+						reing.hz("Größe",groesse);
 						reing.hz("Änderungsdatum",&aedat);
 						reing.schreib(/*sammeln*/0,/*obverb*/obverb,/*idp*/&datid);
 
@@ -676,7 +676,7 @@ void hhcl::pvirtfuehraus()
 																		if (lerg) {
 																			if (ficdsp!=255) ficdsp=33023; // orange
 																		} else {
-																			caus<<rot<<"neue Niereninsuffizienz!"<<endl;
+//																			caus<<rot<<"neue Niereninsuffizienz!"<<endl;
 																			ficdsp=255;
 																		}
 																	} // 	if (!ni.obqueryfehler)
@@ -692,7 +692,7 @@ void hhcl::pvirtfuehraus()
 																	if (lerg) {
 																		if (ficdsp!=255) ficdsp=33023; // orange
 																	} else {
-																		caus<<rot<<"neue Herzinsuffizienz!"<<endl;
+//																		caus<<rot<<"neue Herzinsuffizienz!"<<endl;
 																		ficdsp=255;
 																	}
 																} // 	if (!ni.obqueryfehler)
@@ -780,20 +780,21 @@ void hhcl::pvirtfuehraus()
 																hinwsp=255;
 															} else if ((obm&&iwert<13.5)||iwert<11.5) {
 																hinw="V.a. Anämie";
-																hinwsp=255;
 																if (obpid) {
 																	if (ficd!="") ficd+=',';
 																	ficd+="D64.9";
 																	RS an(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^D46|^D5[012678]|^D6[14]' AND obdauer<>0",aktc,ZDB);
-																	//																RS an(My,"SELECT icd FROM `diagnosen` WHERE pat_id = "+pid+" AND diagtext LIKE '%anämie%' "
-																	//																		"AND diagsicherheit NOT IN ('A','Z') AND COALESCE(f6010,0)=0 AND obdauer<>0",aktc,ZDB);
+																	// RS an(My,"SELECT icd FROM `diagnosen` WHERE pat_id = "+pid+" AND diagtext LIKE '%anämie%' "
+																	// "AND diagsicherheit NOT IN ('A','Z') AND COALESCE(f6010,0)=0 AND obdauer<>0",aktc,ZDB);
 																	if (!an.obqueryfehler) {
 																		const char *const *const *const lerg{an.HolZeile()};
 																		if (lerg) {
 																			if (ficdsp!=255) ficdsp=33023; // orange
+																			hinwsp=33023; // orange
 																		} else {
-																			caus<<rot<<"neue Anämie!"<<endl;
+//																			caus<<rot<<"neue Anämie!"<<endl;
 																			ficdsp=255;
+																			hinwsp=255;
 																		}
 																	} // 	if (!ni.obqueryfehler)
 																} // if (obpid)
@@ -802,7 +803,7 @@ void hhcl::pvirtfuehraus()
 															//									if (hinw!="") KLA
 														reine.hz("Hinweise",hinw);
 														reine.hz("hinwsp",hinwsp);
-														if (ficd!="") caus<<"fICD: "<<ficd<<endl;
+//														if (ficd!="") caus<<"fICD: "<<ficd<<endl;
 														reine.hz("fICD",ficd);
 														reine.hz("fICDsp",ficdsp);
 														//									KLZ
