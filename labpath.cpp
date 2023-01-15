@@ -491,6 +491,7 @@ void hhcl::pvirtfuehraus()
 														// mehrere Patienten gefunden:
 													} else if (zl>1) {
 														iru=(unsigned)-2; // als nächstes große Schleife abbrechen
+														// Patientennr und -name holen und schauen, ob er eindeutig ist
 														RS npid(My,"SELECT COUNT(1) OVER() zl, l.pat_id, CONCAT(gesname(l.pat_id),' (',patalter(l.pat_id),')'),geschlecht "
 																"FROM labor2a l LEFT JOIN namen n USING(pat_id)"
 																"WHERE l.pat_id IN (SELECT pat_id FROM namen "
@@ -640,6 +641,7 @@ void hhcl::pvirtfuehraus()
 															reine.hz("wertsp",16777215);
 														} // 									if (obpid) else
 														const double iwert{atof(wert.c_str())};
+														// 1. GFR
 														if (iinstr(abkue,string("gfr"))!=-1 || iinstr(abkue,string("gfc"))!=-1 || iinstr(abkue,string("mdrd"))!=-1) {
 															if (obpid) {
 																RS mf(My,"SELECT COALESCE(("
@@ -682,6 +684,7 @@ void hhcl::pvirtfuehraus()
 																	} // 	if (!ni.obqueryfehler)
 																} // iwert < 45
 															} // obpid
+															// 2. nt-Pro-BNP
 														} else if (abkue=="BNPS"||abkue=="NTBNPKO") {
 															if (obpid && iwert>300) {
 																if (ficd!="") ficd+=',';
@@ -697,11 +700,13 @@ void hhcl::pvirtfuehraus()
 																	}
 																} // 	if (!ni.obqueryfehler)
 															} // if (obpid && iwert>300)
+															// 3. CK
 														} else if (iinstr(abkue,string("ck"))!=-1) {
 															if (iwert>999) {
 																hinw="CK hoch";
 																hinwsp=255;
 															}
+															// 4. TSH
 														} else if (iinstr(abkue,string("tsh"))!=-1 || iinstr(abkue,string("tsbf"))!=-1|| iinstr(abkue,string("tsbl"))!=-1) {
 															if (iwert>(palter<25?2.5:palter>65?8:5)||iwert<0.25) {
 																if (iwert<0.25) {
@@ -735,6 +740,7 @@ void hhcl::pvirtfuehraus()
 																	} // 												if (!llb.obqueryfehler)
 																} // 											if (obpid)
 															} // 										if (iwert>(palter<25?2.5:palter>65?8:5)||iwert<0.25)
+															// 5. fT4
 														} else if (iinstr(abkue,string("ft4"))!=-1) {
 															if (iwert<12||iwert>22) {
 																if (iwert>22) {
@@ -767,12 +773,14 @@ void hhcl::pvirtfuehraus()
 																} // 											if (obpid)
 															} // 										if (iwert<12||iwert>22)
 																// SELECT abkü from laborparameter WHERE langtext IN  ('Kalium','Kalium im Heparinblut');
+															// 6. Kalium
 														} else if (abkue=="k"||abkue=="K"||abkue=="KALI"||abkue=="KHEP"||abkue=="TM<>K<>Labor2"||
 																abkue=="TM<>KALI<>Labor Schottdorf"||abkue=="TM<>K<>"||abkue=="TM<>K<>Labor1") {
 															if (iwert<3.5 ||iwert>5.5) {
 																hinw="V.a. Dyskaliämie";
 																hinwsp=255;
 															}
+															// 7. Hämoglobin
 														} else if (abkue=="HB") {
 															int obm{strcmp(cjj(ferg,3),"w")};
 															if (vorwert!=0 && vorwert-iwert>1.5) {
@@ -783,9 +791,9 @@ void hhcl::pvirtfuehraus()
 																if (obpid) {
 																	if (ficd!="") ficd+=',';
 																	ficd+="D64.9";
-																	RS an(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^D46|^D5[012678]|^D6[14]' AND obdauer<>0",aktc,ZDB);
 																	// RS an(My,"SELECT icd FROM `diagnosen` WHERE pat_id = "+pid+" AND diagtext LIKE '%anämie%' "
 																	// "AND diagsicherheit NOT IN ('A','Z') AND COALESCE(f6010,0)=0 AND obdauer<>0",aktc,ZDB);
+																	RS an(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^D46|^D5[012678]|^D6[14]' AND obdauer<>0",aktc,ZDB);
 																	if (!an.obqueryfehler) {
 																		const char *const *const *const lerg{an.HolZeile()};
 																		if (lerg) {
@@ -799,6 +807,21 @@ void hhcl::pvirtfuehraus()
 																	} // 	if (!ni.obqueryfehler)
 																} // if (obpid)
 															} //										if (vorwert!=0 && vorwert-iwert>1.5)    else if
+															// 8. Harnsäure
+														} else if (abkue=="HS") {
+															if (iwert>7) {
+																	if (ficd!="") ficd+=',';
+																	ficd+="E79.0";
+																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E79.0' AND obdauer<>0",aktc,ZDB);
+																	if (!hs.obqueryfehler) {
+																		const char *const *const *const lerg{hs.HolZeile()};
+																		if (lerg) {
+																			if (ficdsp!=255) ficdsp=33023; // orange
+																		} else {
+																			ficdsp=255;
+																		}
+																	} // 	if (!ni.obqueryfehler)
+															}
 														} // if (abkue==  ...			else if (abkue=="HB")
 															//									if (hinw!="") KLA
 														reine.hz("Hinweise",hinw);
