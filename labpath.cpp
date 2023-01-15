@@ -460,7 +460,7 @@ void hhcl::pvirtfuehraus()
 													",patalter(f.pat_id),COALESCE(s.voret,0) voret "
 													"FROM faelle f "
 													"LEFT JOIN namen n USING (pat_id) "
-													"LEFT JOIN sws s ON s.pat_id=p.pat_id AND s.voret>f.qanf"
+													"LEFT JOIN sws s ON s.pat_id=p.pat_id AND s.voret>f.qanf "
 													"WHERE n.nachname='"+nname+"' AND n.vorname LIKE '"+vname+"%' "
 													"AND BhFB<STR_TO_DATE('"+erstl+"','%d.%m.%Y') AND "
 													"(BhFE1>ADDDATE(STR_TO_DATE('"+erstl+"','%d.%m.%Y'),-"+itv+") OR BhFE1=18991230) "
