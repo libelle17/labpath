@@ -39,8 +39,12 @@ char const *DPROG_T[T_MAX+1][SprachZahl]=
 	{"Vorwert 2","previous value 2"},
 	// T_Normbereich
 	{"Normbereich","normal range"},
+	// T_HinweisedL
+	{"Hinweise des Labors","hints of the lab"},
 	// T_Hinweise
 	{"Hinweise","hints"},
+	// T_fehlende_ICDs
+	{"fehlende ICDs","missing ICDs"},
 	// T_Termine
 	{"Termine","appointments"},
 	// T_Laborwert
@@ -91,6 +95,8 @@ char const *DPROG_T[T_MAX+1][SprachZahl]=
 	{"Farbe für Hinweisspalten","color for clou columns"},
 	// T_termsp,
 	{"Farbe für Terminspalte","color for appointment column"},
+	// T_ficdsp
+	{"Farbe für fehlende ICD-Spalte","color for missing icds-column"},
 	{"",""} //α
 }; // char const *DPROG_T[T_MAX+1][SprachZahl]=
 
@@ -210,13 +216,15 @@ void hhcl::prueflpath(DB *My, const size_t aktc, const int obverb, const int obl
 			Feld("Vorwert_1","varchar","30","",Tx[T_Vorwert_1],0,0,1),
 			Feld("Vorwert_2","varchar","30","",Tx[T_Vorwert_2],0,0,1),
 			Feld("Normbereich","varchar","300","",Tx[T_Normbereich],0,0,1),
-			Feld("Labhinw","varchar","50","Hinweis des Labors",Tx[T_Hinweise],0,0,1),
-			Feld("Hinweise","varchar","50","",Tx[T_Hinweise],0,0,1,""),
+			Feld("Labhinw","varchar","60","Hinweis des Labors",Tx[T_HinweisedL],0,0,1),
+			Feld("Hinweise","varchar","60","",Tx[T_Hinweise],0,0,1,""),
+			Feld("fICD","varchar","60","",Tx[T_fehlende_ICDs],0,0,1,""),
 		  Feld("namsp","int","10","",Tx[T_namsp],0,0,1),
 		  Feld("wertsp","int","10","",Tx[T_wertsp],0,0,1),
 		  Feld("hinwsp","int","10","",Tx[T_hinwsp],0,0,1),
 		  Feld("termsp","int","10","",Tx[T_termsp],0,0,1),
-			Feld("Termine","varchar","200","",Tx[T_Termine],0,0,1),
+		  Feld("fICDsp","int","10","",Tx[T_ficdsp],0,0,1),
+			Feld("Termine","longtext","","",Tx[T_Termine],0,0,1),
 		};
 		Feld ifelder1[] = {Feld("Pat_id"),Feld("Parameter")}; Index i1("Patid_Par",ifelder1,elemzahl(ifelder1));
 		Index indices[]={i1};
@@ -284,22 +292,21 @@ void hhcl::pvirtnachrueckfragen()
 bool getasciiline(mdatei& mdat,string& zeile)
 {
 	string zwi;
-	bool erg{0};
+	bool glerg{0};
 	static iconvc i("ISO-8859-1","UTF-8//TRANSLIT");
   if (getline(mdat,zwi)) {
 		if (zwi.length()) {
 			zeile=i.convert(zwi);
-			erg=true; 
+			glerg=true; 
 		}
 	}
-	if (!erg) zeile.clear();
-	return erg;
+	if (!glerg) zeile.clear();
+	return glerg;
 } // getasciiline
 
 #ifdef false
 string ausg(string str)
 {
-	string erg;
 	iconvc i("ISO-8859-1","UTF-8//TRANSLIT");
 	return i.convert(str);
     char *q=(char*)str.c_str();
@@ -414,9 +421,9 @@ void hhcl::pvirtfuehraus()
 								}
 							} else {
 								uchar obname{0},obpid{0};
-								string pid,gschl,abkue,einh,wert,mfmg,hinw;
+								string pid,gschl,abkue,einh,wert,mfmg,hinw,ficd;
 								double vorwert;
-								long hinwsp{16777215};
+								long hinwsp{16777215}, ficdsp{16777215};
 								if (nteile[nteile.size()-1]!=altnn || nteile[0]!=altvn) {
 									altnn=nteile[nteile.size()-1];
 									altvn=nteile[0];
@@ -546,7 +553,7 @@ void hhcl::pvirtfuehraus()
 																" CASE "
 																"  WHEN TKZ<>0 AND GSZ=0 AND WDZ=0 and ahz=0 THEN 16767449 " // hellblau, &HFFD9D9
 																"  WHEN tkz=0 AND gsz<>0 AND wdz=0 and ahz=0 THEN 12648447 "// vbhellgelb, &HC0FFFF
-																"  WHEN tkz=0 AND gsz=0 AND ahz<>0 THEN 16765610 "// mittigahrosa, &HFFD2AA 
+																"  WHEN tkz=0 AND gsz=0 AND ahz<>0 THEN 11195135 "// mittigahrosa, &HFFD2AA 
 																"  WHEN tkz=0 AND gsz=0 AND wdz<>0 THEN 12632319 "// mittigrosa, &HC0C0FF
 																"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 and ahz=0 THEN 8454016 "// vbhellgrün, &H80FF80
 																"  WHEN tkz<>0 AND gsz=0 AND (wdz<>0 or ahz<>0) THEN 14053594 "// vbhelllila, rgb(218,112,214)
@@ -576,7 +583,7 @@ void hhcl::pvirtfuehraus()
 																", CASE "
 																"  WHEN TKZ<>0 AND GSZ=0 AND WDZ=0 and ahz=0 THEN 16767449 " // hellblau, &HFFD9D9
 																"  WHEN tkz=0 AND gsz<>0 AND wdz=0 and ahz=0 THEN 12648447 "// vbhellgelb, &HC0FFFF
-																"  WHEN tkz=0 AND gsz=0 AND ahz<>0 THEN 16765610 "// mittigahrosa, &HFFD2AA 
+																"  WHEN tkz=0 AND gsz=0 AND ahz<>0 THEN 11195135 "// mittigahrosa, &HFFD2AA 
 																"  WHEN tkz=0 AND gsz=0 AND wdz<>0 THEN 12632319 "// mittigrosa, &HC0C0FF
 																"  WHEN tkz<>0 AND gsz<>0 AND wdz=0 and ahz=0 THEN 8454016 "// vbhellgrün, &H80FF80
 																"  WHEN tkz<>0 AND gsz=0 AND (wdz<>0 or ahz<>0) THEN 14053594 "// vbhelllila, rgb(218,112,214)
@@ -643,7 +650,36 @@ void hhcl::pvirtfuehraus()
 																hinw+="eGFR <-> "+mfmg+" mg Metformin/d!";
 																hinwsp=255; // vbred
 															}
+															if (iwert<45) {
+																if (ficd!="") ficd+=',';
+																if (iwert<15) ficd+="N18.5"; else if (iwert<30) ficd+="N18.4"; else ficd+="N18.3";
+																RS ni(My,"SELECT gicd FROM diagview WHERE pat_id = "+pid+" AND gicd RLIKE '^N1[89]' AND obdauer<>0",aktc,ZDB);
+																if (!ni.obqueryfehler) {
+																	const char *const *const *const lerg{ni.HolZeile()};
+																	if (lerg) {
+																		if (ficdsp!=255) ficdsp=33023; // orange
+																	} else {
+																		caus<<rot<<"neue Niereninsuffizienz!"<<endl;
+																		ficdsp=255;
+																	}
+																} // 	if (!ni.obqueryfehler)
+															} // iwert < 45
 														} // obpid
+													} else if (abkue=="BNPS"||abkue=="NTBNPKO") {
+														if (obpid && iwert>300) {
+															if (ficd!="") ficd+=',';
+															ficd+="I50.19";
+															RS hi(My,"SELECT gicd FROM diagview WHERE pat_id = "+pid+" AND gicd RLIKE '^I50' AND obdauer<>0",aktc,ZDB);
+															if (!hi.obqueryfehler) {
+																const char *const *const *const lerg{hi.HolZeile()};
+																if (lerg) {
+																	if (ficdsp!=255) ficdsp=33023; // orange
+																} else {
+																	caus<<rot<<"neue Herzinsuffizienz!"<<endl;
+																	ficdsp=255;
+																}
+															} // 	if (!ni.obqueryfehler)
+														} // if (obpid && iwert>300)
 													} else if (iinstr(abkue,string("ck"))!=-1) {
 														if (iwert>999) {
 															hinw="CK hoch";
@@ -657,9 +693,9 @@ void hhcl::pvirtfuehraus()
 															} else {
 																hinw="mögl.unzur.SD-Substitution";
 																hinwsp=255;
-															}
+															} // if (iwert<0.25)
 															if (obpid) {
-																RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü='fT4' GROUP BY zeitpunkt DESC LIMIT 1\")",aktc,ZDB);
+																RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü='fT4' AND zeitpunkt>now()-INTERVAL 5 DAY GROUP BY zeitpunkt DESC LIMIT 1\")",aktc,ZDB);
 																char ***gerg{0};
 																if (!llb.obqueryfehler) {
 																	gerg=llb.HolZeile();
@@ -692,7 +728,7 @@ void hhcl::pvirtfuehraus()
 																hinwsp=255;
 															}
 															if (obpid) {
-																RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü IN ('TSH','TSBF','TSBL') GROUP BY zeitpunkt DESC LIMIT 1\")",aktc,ZDB);
+																RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü IN ('TSH','TSBF','TSBL') AND zeitpunkt>now()-INTERVAL 5 DAY GROUP BY zeitpunkt DESC LIMIT 1\")",aktc,ZDB);
 																char ***gerg{0};
 																if (!llb.obqueryfehler) {
 																	gerg=llb.HolZeile();
@@ -729,21 +765,29 @@ void hhcl::pvirtfuehraus()
 															hinw="V.a. Anämie";
 															hinwsp=255;
 															if (obpid) {
-																RS an(My,"SELECT icd FROM `diagnosen` d WHERE d.pat_id = "+pid+" AND d.diagtext LIKE '%anämie%' "
-																		"AND d.diagsicherheit NOT IN ('A','Z') AND COALESCE(d.f6010,0)=0 AND d.obdauer<>0",aktc,ZDB);
+																if (ficd!="") ficd+=',';
+																ficd+="D64.9";
+																RS an(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND icd RLIKE '^D46|^D5[012678]|^D6[14]' AND obdauer<>0",aktc,ZDB);
+//																RS an(My,"SELECT icd FROM `diagnosen` WHERE pat_id = "+pid+" AND diagtext LIKE '%anämie%' "
+//																		"AND diagsicherheit NOT IN ('A','Z') AND COALESCE(f6010,0)=0 AND obdauer<>0",aktc,ZDB);
 																if (!an.obqueryfehler) {
-																	char ***cerg{0};
-																	while (cerg=an.HolZeile(),cerg?*cerg:0) {
-																		break;
+																	const char *const *const *const lerg{an.HolZeile()};
+																	if (lerg) {
+																		if (ficdsp!=255) ficdsp=33023; // orange
+																	} else {
+																		caus<<rot<<"neue Anämie!"<<endl;
+																		ficdsp=255;
 																	}
-																	if (cerg) hinwsp=33023; // orange
-																} // 												if (!an.obqueryfehler)
+																} // 	if (!ni.obqueryfehler)
 															} // if (obpid)
 														} //										if (vorwert!=0 && vorwert-iwert>1.5)    else if
 													} // if (abkue==  ...			else if (abkue=="HB")
 													//									if (hinw!="") KLA
 													reine.hz("Hinweise",hinw);
 													reine.hz("hinwsp",hinwsp);
+													if (ficd!="") caus<<"fICD: "<<ficd<<endl;
+													reine.hz("fICD",ficd);
+													reine.hz("fICDsp",ficdsp);
 													//									KLZ
 													reine.schreib(/*sammeln*/0,/*obverb*/obverb,/*idp*/0);
 													goto fertig;

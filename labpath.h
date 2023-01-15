@@ -16,7 +16,9 @@ enum T_
 	T_Vorwert_1,
 	T_Vorwert_2,
 	T_Normbereich,
+	T_HinweisedL,
 	T_Hinweise,
+	T_fehlende_ICDs,
 	T_Termine,
 	T_Laborwert,
 	T_quellvz,
@@ -42,6 +44,7 @@ enum T_
 	T_wertsp,
 	T_hinwsp,
 	T_termsp,
+	T_ficdsp,
 	T_MAX //α
 }; // enum T_ //ω
 //α
