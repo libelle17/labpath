@@ -677,7 +677,7 @@ void hhcl::pvirtfuehraus()
 																	RS ni(My,"SELECT gicd FROM diagview WHERE pat_id = "+pid+" AND gicd RLIKE '^N1[89]' AND obdauer<>0",aktc,ZDB);
 																	if (!ni.obqueryfehler) {
 																		const char *const *const *const lerg{ni.HolZeile()};
-																		if (lerg) {
+																		if (lerg?*lerg:0) {
 																			if (ficdsp!=255) ficdsp=33023; // orange
 																		} else {
 //																			caus<<rot<<"neue Niereninsuffizienz!"<<endl;
@@ -694,7 +694,7 @@ void hhcl::pvirtfuehraus()
 																RS hi(My,"SELECT gicd FROM diagview WHERE pat_id = "+pid+" AND gicd RLIKE '^I50' AND obdauer<>0",aktc,ZDB);
 																if (!hi.obqueryfehler) {
 																	const char *const *const *const lerg{hi.HolZeile()};
-																	if (lerg) {
+																	if (lerg?*lerg:0) {
 																		if (ficdsp!=255) ficdsp=33023; // orange
 																	} else {
 //																		caus<<rot<<"neue Herzinsuffizienz!"<<endl;
@@ -798,7 +798,7 @@ void hhcl::pvirtfuehraus()
 																	RS an(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^D46|^D5[012678]|^D6[14]' AND obdauer<>0",aktc,ZDB);
 																	if (!an.obqueryfehler) {
 																		const char *const *const *const lerg{an.HolZeile()};
-																		if (lerg) {
+																		if (lerg?*lerg:0) {
 																			if (ficdsp!=255) ficdsp=33023; // orange
 																			hinwsp=33023; // orange
 																		} else {
@@ -817,7 +817,7 @@ void hhcl::pvirtfuehraus()
 																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E79.0' AND obdauer<>0",aktc,ZDB);
 																	if (!hs.obqueryfehler) {
 																		const char *const *const *const lerg{hs.HolZeile()};
-																		if (lerg) {
+																		if (lerg?*lerg:0) {
 																			if (ficdsp!=255) ficdsp=33023; // orange
 																		} else {
 																			ficdsp=255;
@@ -833,7 +833,7 @@ void hhcl::pvirtfuehraus()
 																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E78' AND obdauer<>0",aktc,ZDB);
 																	if (!hs.obqueryfehler) {
 																		const char *const *const *const lerg{hs.HolZeile()};
-																		if (lerg) {
+																		if (lerg?*lerg:0) {
 																			if (ficdsp!=255) ficdsp=33023; // orange
 																		} else {
 																			ficdsp=255;
