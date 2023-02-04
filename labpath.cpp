@@ -857,7 +857,7 @@ void hhcl::pvirtfuehraus()
 																	if (lerg?*lerg:0) {
 																		if (ficdsp!=255) ficdsp=33023; // orange
 																	} else {
-//																		caus<<rot<<"neue Nephropathie!"<<endl;
+																		caus<<rot<<"neue Nephropathie!"<<endl;
 																		ficdsp=255;
 																	}
 																} // 	if (!ni.obqueryfehler)
