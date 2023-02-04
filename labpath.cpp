@@ -903,11 +903,34 @@ void hhcl::pvirtfuehraus()
 																	if (lerg?*lerg:0) {
 																		if (ficdsp!=255) ficdsp=33023; // orange
 																	} else {
-																		caus<<rot<<"neuer Vit-D-Mangel!"<<endl;
+//																		caus<<rot<<"neuer Vit-D-Mangel!"<<endl;
 																		ficdsp=255;
 																	} // if (lerg?*lerg:0)
 																} // 	if (!ni.obqueryfehler)
 															} // ((abkue=="DIHYKP"||abkue=="DIHYK"||abkue=="VID2")&&iwert<25))) 
+															// 13. Parathormon
+														} else if (abkue=="PTH"||abkue=="PTH-E"||abkue=="PTHP"||abkue=="PTHI02"||abkue=="PTHIT") {
+//															caus<<rot<<"Parathoromn untersucht: "<<iwert<<" "<<einh<<endl;
+															if (obpid && iwert<65) {
+																RS niin(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE 'N18.[3-5]' AND obdauer<>0",aktc,ZDB);
+																if (!niin.obqueryfehler) {
+																	const char *const *const *const nierg{niin.HolZeile()};
+																	if (nierg?*nierg:0) {
+																		if (ficd!="") ficd+=',';
+																		ficd+="E53.8";
+																		RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E53.8|^D51' AND obdauer<>0",aktc,ZDB);
+																		if (!hs.obqueryfehler) {
+																			const char *const *const *const lerg{hs.HolZeile()};
+																			if (lerg?*lerg:0) {
+																				if (ficdsp!=255) ficdsp=33023; // orange
+																			} else {
+																		caus<<rot<<"neuer sekundärer Hyperpara!"<<endl;
+																				ficdsp=255;
+																			} // if (lerg?*lerg:0)
+																		} // 	if (!ni.obqueryfehler)
+																	} // 	if (nierg?*nierg:0)
+																} // 	if (!niin.obqueryfehler) 
+															} // if (obpid && iwert<65)
 														} // if (abkue==  ...			else if (abkue=="HB")
 															//									if (hinw!="") KLA
 														reine.hz("Hinweise",hinw);
