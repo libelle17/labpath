@@ -875,23 +875,39 @@ void hhcl::pvirtfuehraus()
 															} // if (obpid && iwert>30)
 															// 11. Vit B12
 														} else if (abkue=="B12N"||abkue=="VB12"||abkue=="VI1201") {
-															caus<<rot<<"Vit-B12 untersucht: "<<iwert<<" "<<einh<<endl;
+//															caus<<rot<<"Vit-B12 untersucht: "<<iwert<<" "<<einh<<endl;
 															if (obpid && (einh=="pg/ml" && iwert<197)) {
 																	if (ficd!="") ficd+=',';
 																	ficd+="E53.8";
-																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE 'E53.8|D51' AND obdauer<>0",aktc,ZDB);
+																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E53.8|^D51' AND obdauer<>0",aktc,ZDB);
 																	if (!hs.obqueryfehler) {
 																		const char *const *const *const lerg{hs.HolZeile()};
 																		if (lerg?*lerg:0) {
 																			if (ficdsp!=255) ficdsp=33023; // orange
 																		} else {
-																		  caus<<rot<<"neuer Vit-B12-Mangel!"<<endl;
+																			//																		  caus<<rot<<"neuer Vit-B12-Mangel!"<<endl;
 																			ficdsp=255;
-																		}
+																		} // if (lerg?*lerg:0)
 																	} // 	if (!ni.obqueryfehler)
-															}
-															// 10. Nephropathie
-															// s. Zieldbfunktionen obLabI
+															} // 	if (obpid && (einh=="pg/ml" && iwert<197))
+															// 12. Vit D
+														} else if (abkue=="VIT3KL"||abkue=="VITD01"||abkue=="VITD"||abkue=="DIHYKP"||abkue=="DIHYK"||abkue=="VID2") {
+															caus<<rot<<"Vit-D untersucht: "<<iwert<<" "<<einh<<endl;
+															if (obpid && (((abkue=="VIT3KL"||abkue=="VITD01"||abkue=="VITD") && iwert<20)||
+																		((abkue=="DIHYKP"||abkue=="DIHYK"||abkue=="VID2")&&iwert<25))) {
+																if (ficd!="") ficd+=',';
+																ficd+="E55.9";
+																RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd = 'E55' AND obdauer<>0",aktc,ZDB);
+																if (!hs.obqueryfehler) {
+																	const char *const *const *const lerg{hs.HolZeile()};
+																	if (lerg?*lerg:0) {
+																		if (ficdsp!=255) ficdsp=33023; // orange
+																	} else {
+																		caus<<rot<<"neuer Vit-D-Mangel!"<<endl;
+																		ficdsp=255;
+																	} // if (lerg?*lerg:0)
+																} // 	if (!ni.obqueryfehler)
+															} // ((abkue=="DIHYKP"||abkue=="DIHYK"||abkue=="VID2")&&iwert<25))) 
 														} // if (abkue==  ...			else if (abkue=="HB")
 															//									if (hinw!="") KLA
 														reine.hz("Hinweise",hinw);
