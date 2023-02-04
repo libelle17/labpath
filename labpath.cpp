@@ -849,24 +849,34 @@ void hhcl::pvirtfuehraus()
 																	      &&(einh.substr(0,5)=="mg/g "||einh==""||einh=="kA"||einh=="'kA'"))
 																       ||((abkue=="ALBU"||abkue=="ALBUMU")&&(einh=="mg/l"))){
 															if (obpid && iwert>30) {
-																if (ficd!="") ficd+=',';
-																ficd+="N08.3";
-																RS hi(My,"SELECT gicd FROM diagview WHERE pat_id = "+pid+" AND gicd='N08.3' AND obdauer<>0",aktc,ZDB);
-																if (!hi.obqueryfehler) {
-																	const char *const *const *const lerg{hi.HolZeile()};
-																	if (lerg?*lerg:0) {
-																		if (ficdsp!=255) ficdsp=33023; // orange
-																	} else {
-																		caus<<rot<<"neue Nephropathie!"<<endl;
-																		ficdsp=255;
-																	}
-																} // 	if (!ni.obqueryfehler)
+																RS voralb(My,"SELECT 0 FROM labor1a WHERE pat_id="+pid+" AND zeitpunkt<STR_TO_DATE('"+erstl+"','%d.%m.%Y')"
+																		"AND (((abkue=='ALBCRE'||abkue=='ALBKRE'||abkue=='ALBQ'||abkue=='ALBUM'||abkue=='ALBUP')"
+																	      "&&(einh.substr(0,5)=='mg/g '||einh==''||einh=='kA'||einh==''kA''))"
+																       "||((abkue=='ALBU'||abkue=='ALBUMU')&&(einh=='mg/l')))"
+																		"&&wert>30",aktc,ZDB);
+																if (!voralb.obqueryfehler) {
+																	const char *const *const *const aerg{voralb.HolZeile()};
+																	if (aerg?*aerg:0) {
+																		if (ficd!="") ficd+=',';
+																		ficd+="N08.3";
+																		RS hi(My,"SELECT gicd FROM diagview WHERE pat_id="+pid+" AND gicd='N08.3' AND obdauer<>0",aktc,ZDB);
+																		if (!hi.obqueryfehler) {
+																			const char *const *const *const lerg{hi.HolZeile()};
+																			if (lerg?*lerg:0) {
+																				if (ficdsp!=255) ficdsp=33023; // orange
+																			} else {
+																				caus<<rot<<"neue Nephropathie!"<<endl;
+																				ficdsp=255;
+																			}
+																		} // 	if (!ni.obqueryfehler)
+																	} // aerg?*aerg:0
+																} // !voralb.obqueryfehler
 															} // if (obpid && iwert>30)
 														} // if (abkue==  ...			else if (abkue=="HB")
 															//									if (hinw!="") KLA
 														reine.hz("Hinweise",hinw);
 														reine.hz("hinwsp",hinwsp);
-//														if (ficd!="") caus<<"fICD: "<<ficd<<endl;
+														//														if (ficd!="") caus<<"fICD: "<<ficd<<endl;
 														reine.hz("fICD",ficd);
 														reine.hz("fICDsp",ficdsp);
 														//									KLZ
