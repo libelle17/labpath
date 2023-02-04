@@ -648,7 +648,8 @@ void hhcl::pvirtfuehraus()
 															if (obpid) {
 																RS mf(My,"SELECT COALESCE(("
 																		" SELECT"
-																		" IF(INSTR(lmp.medikament,'500')<>0,500,IF(INSTR(lmp.medikament,'850')<>0,850,IF(INSTR(lmp.medikament,'iquid'),200,1000)))*"
+																		" IF(INSTR(lmp.medikament,'500')<>0,500,"
+																		   "IF(INSTR(lmp.medikament,'850')<>0,850,IF(INSTR(lmp.medikament,'iquid'),200,1000)))*"
 																		" (REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(mo,',','.'),'½','.5'),'¼','.25'),'1/2','.5'),' ','')+"
 																		" REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(mi,',','.'),'½','.5'),'¼','.25'),'1/2','.5'),' ','')+"
 																		" REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(nm,',','.'),'½','.5'),'¼','.25'),'1/2','.5'),' ','')+"
@@ -719,7 +720,8 @@ void hhcl::pvirtfuehraus()
 																	hinwsp=255;
 																} // if (iwert<0.25)
 																if (obpid) {
-																	RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü='fT4' AND zeitpunkt>now()-INTERVAL 5 DAY GROUP BY zeitpunkt DESC LIMIT 1\")",aktc,ZDB);
+																	RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü='fT4' AND zeitpunkt>now()-INTERVAL 5 DAY "
+																			      "GROUP BY zeitpunkt DESC LIMIT 1\")",aktc,ZDB);
 																	char ***gerg{0};
 																	if (!llb.obqueryfehler) {
 																		gerg=llb.HolZeile();
@@ -753,7 +755,8 @@ void hhcl::pvirtfuehraus()
 																	hinwsp=255;
 																}
 																if (obpid) {
-																	RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü IN ('TSH','TSBF','TSBL') AND zeitpunkt>now()-INTERVAL 5 DAY GROUP BY zeitpunkt DESC LIMIT 1\")",aktc,ZDB);
+																	RS llb(My,"CALL geslabdp("+pid+",\"WHERE abkü IN ('TSH','TSBF','TSBL') AND"
+																			      " zeitpunkt>now()-INTERVAL 5 DAY GROUP BY zeitpunkt DESC LIMIT 1\")",aktc,ZDB);
 																	char ***gerg{0};
 																	if (!llb.obqueryfehler) {
 																		gerg=llb.HolZeile();
@@ -840,6 +843,25 @@ void hhcl::pvirtfuehraus()
 																		}
 																	} // 	if (!ni.obqueryfehler)
 															}
+															// 10. Nephropathie
+															// s. Zieldbfunktionen obLabI
+														} else if (((abkue=="ALBCRE"||abkue=="ALBKRE"||abkue=="ALBQ"||abkue=="ALBUM"||abkue=="ALBUP") 
+																	      &&(einh.substr(0,5)=="mg/g "||einh==""||einh=="kA"||einh=="'kA'"))
+																       ||((abkue=="ALBU"||abkue=="ALBUMU")&&(einh=="mg/l"))){
+															if (obpid && iwert>30) {
+																if (ficd!="") ficd+=',';
+																ficd+="N08.3";
+																RS hi(My,"SELECT gicd FROM diagview WHERE pat_id = "+pid+" AND gicd='N08.3' AND obdauer<>0",aktc,ZDB);
+																if (!hi.obqueryfehler) {
+																	const char *const *const *const lerg{hi.HolZeile()};
+																	if (lerg?*lerg:0) {
+																		if (ficdsp!=255) ficdsp=33023; // orange
+																	} else {
+//																		caus<<rot<<"neue Nephropathie!"<<endl;
+																		ficdsp=255;
+																	}
+																} // 	if (!ni.obqueryfehler)
+															} // if (obpid && iwert>30)
 														} // if (abkue==  ...			else if (abkue=="HB")
 															//									if (hinw!="") KLA
 														reine.hz("Hinweise",hinw);
