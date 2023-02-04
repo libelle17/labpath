@@ -875,6 +875,7 @@ void hhcl::pvirtfuehraus()
 															} // if (obpid && iwert>30)
 															// 11. Vit B12
 														} else if (abkue=="B12N"||abkue=="VB12"||abkue=="VI1201") {
+															caus<<rot<<"Vit-B12 untersucht: "<<iwert<<" "<<einh<<endl;
 															if (obpid && (einh=="pg/ml" && iwert<197)) {
 																	if (ficd!="") ficd+=',';
 																	ficd+="E53.8";
