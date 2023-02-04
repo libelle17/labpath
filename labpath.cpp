@@ -681,7 +681,7 @@ void hhcl::pvirtfuehraus()
 																		if (lerg?*lerg:0) {
 																			if (ficdsp!=255) ficdsp=33023; // orange
 																		} else {
-//																			caus<<rot<<"neue Niereninsuffizienz!"<<endl;
+//																			caus<<rot<<"neue Niereninsuffizienz!"<<schwarz<<endl;
 																			ficdsp=255;
 																		}
 																	} // 	if (!ni.obqueryfehler)
@@ -698,7 +698,7 @@ void hhcl::pvirtfuehraus()
 																	if (lerg?*lerg:0) {
 																		if (ficdsp!=255) ficdsp=33023; // orange
 																	} else {
-//																		caus<<rot<<"neue Herzinsuffizienz!"<<endl;
+//																		caus<<rot<<"neue Herzinsuffizienz!"<<schwarz<<endl;
 																		ficdsp=255;
 																	}
 																} // 	if (!ni.obqueryfehler)
@@ -805,7 +805,7 @@ void hhcl::pvirtfuehraus()
 																			if (ficdsp!=255) ficdsp=33023; // orange
 																			hinwsp=33023; // orange
 																		} else {
-//																			caus<<rot<<"neue Anämie!"<<endl;
+//																			caus<<rot<<"neue Anämie!"<<schwarz<<endl;
 																			ficdsp=255;
 																			hinwsp=255;
 																		}
@@ -866,7 +866,7 @@ void hhcl::pvirtfuehraus()
 																			if (lerg?*lerg:0) {
 																				if (ficdsp!=255) ficdsp=33023; // orange
 																			} else {
-//																				caus<<rot<<"neue Nephropathie!"<<endl;
+//																				caus<<rot<<"neue Nephropathie!"<<schwarz<<endl;
 																				ficdsp=255;
 																			}
 																		} // 	if (!ni.obqueryfehler)
@@ -875,7 +875,7 @@ void hhcl::pvirtfuehraus()
 															} // if (obpid && iwert>30)
 															// 11. Vit B12
 														} else if (abkue=="B12N"||abkue=="VB12"||abkue=="VI1201") {
-//															caus<<rot<<"Vit-B12 untersucht: "<<iwert<<" "<<einh<<endl;
+//															caus<<rot<<"Vit-B12 untersucht: "<<iwert<<" "<<einh<<schwarz<<endl;
 															if (obpid && (einh=="pg/ml" && iwert<197)) {
 																	if (ficd!="") ficd+=',';
 																	ficd+="E53.8";
@@ -885,14 +885,14 @@ void hhcl::pvirtfuehraus()
 																		if (lerg?*lerg:0) {
 																			if (ficdsp!=255) ficdsp=33023; // orange
 																		} else {
-																			//																		  caus<<rot<<"neuer Vit-B12-Mangel!"<<endl;
+																			// caus<<rot<<"neuer Vit-B12-Mangel!"<<schwarz<<endl;
 																			ficdsp=255;
 																		} // if (lerg?*lerg:0)
 																	} // 	if (!ni.obqueryfehler)
 															} // 	if (obpid && (einh=="pg/ml" && iwert<197))
 															// 12. Vit D
 														} else if (abkue=="VIT3KL"||abkue=="VITD01"||abkue=="VITD"||abkue=="DIHYKP"||abkue=="DIHYK"||abkue=="VID2") {
-															caus<<rot<<"Vit-D untersucht: "<<iwert<<" "<<einh<<endl;
+//															caus<<rot<<"Vit-D untersucht: "<<iwert<<" "<<einh<<schwarz<<endl;
 															if (obpid && (((abkue=="VIT3KL"||abkue=="VITD01"||abkue=="VITD") && iwert<20)||
 																		((abkue=="DIHYKP"||abkue=="DIHYK"||abkue=="VID2")&&iwert<25))) {
 																if (ficd!="") ficd+=',';
@@ -903,14 +903,14 @@ void hhcl::pvirtfuehraus()
 																	if (lerg?*lerg:0) {
 																		if (ficdsp!=255) ficdsp=33023; // orange
 																	} else {
-//																		caus<<rot<<"neuer Vit-D-Mangel!"<<endl;
+//																		caus<<rot<<"neuer Vit-D-Mangel!"<<schwarz<<endl;
 																		ficdsp=255;
 																	} // if (lerg?*lerg:0)
 																} // 	if (!ni.obqueryfehler)
 															} // ((abkue=="DIHYKP"||abkue=="DIHYK"||abkue=="VID2")&&iwert<25))) 
 															// 13. Parathormon
 														} else if (abkue=="PTH"||abkue=="PTH-E"||abkue=="PTHP"||abkue=="PTHI02"||abkue=="PTHIT") {
-//															caus<<rot<<"Parathoromn untersucht: "<<iwert<<" "<<einh<<endl;
+//															caus<<rot<<"Parathoromn untersucht: "<<iwert<<" "<<einh<<schwarz<<endl;
 															if (obpid && iwert<65) {
 																RS niin(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE 'N18.[3-5]' AND obdauer<>0",aktc,ZDB);
 																if (!niin.obqueryfehler) {
@@ -924,7 +924,7 @@ void hhcl::pvirtfuehraus()
 																			if (lerg?*lerg:0) {
 																				if (ficdsp!=255) ficdsp=33023; // orange
 																			} else {
-																		caus<<rot<<"neuer sekundärer Hyperpara!"<<endl;
+																		caus<<rot<<"neuer sekundärer Hyperpara!"<<schwarz<<endl;
 																				ficdsp=255;
 																			} // if (lerg?*lerg:0)
 																		} // 	if (!ni.obqueryfehler)
