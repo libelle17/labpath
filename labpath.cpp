@@ -850,9 +850,9 @@ void hhcl::pvirtfuehraus()
 																       ||((abkue=="ALBU"||abkue=="ALBUMU")&&(einh=="mg/l"))){
 															if (obpid && iwert>30) {
 																RS voralb(My,"SELECT 0 FROM labor1a WHERE pat_id="+pid+" AND zeitpunkt<STR_TO_DATE('"+erstl+"','%d.%m.%Y')"
-																		"AND (((abkue=='ALBCRE'||abkue=='ALBKRE'||abkue=='ALBQ'||abkue=='ALBUM'||abkue=='ALBUP')"
-																	      "&&(einh.substr(0,5)=='mg/g '||einh==''||einh=='kA'||einh==''kA''))"
-																       "||((abkue=='ALBU'||abkue=='ALBUMU')&&(einh=='mg/l')))"
+																		"AND (((abkü IN ('ALBCRE','ALBKRE','ALBQ','ALBUM','ALBUP'))"
+																	      "&&(einheit LIKE 'mg/g %'||einheit IN ('','kA','\'kA\''))"
+																       "||((abkue IN ('ALBU','ALBUMU'))&&einheit='mg/l'))"
 																		"&&wert>30",aktc,ZDB);
 																if (!voralb.obqueryfehler) {
 																	const char *const *const *const aerg{voralb.HolZeile()};
