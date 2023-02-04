@@ -849,6 +849,7 @@ void hhcl::pvirtfuehraus()
 																	      &&(einh.substr(0,5)=="mg/g "||einh==""||einh=="kA"||einh=="'kA'"))
 																       ||((abkue=="ALBU"||abkue=="ALBUMU")&&(einh=="mg/l"))){
 															if (obpid && iwert>30) {
+																// die Diagnose mit 'gesichert' erst beim zweiten Albuminurienachweis verlangen
 																RS voralb(My,"SELECT 0 FROM labor1a WHERE pat_id="+pid+" AND zeitpunkt<STR_TO_DATE('"+erstl+"','%d.%m.%Y')"
 																		"AND (((abkü IN ('ALBCRE','ALBKRE','ALBQ','ALBUM','ALBUP'))"
 																	      "&&(einheit LIKE 'mg/g %'||einheit IN ('','kA','\\'kA\\'')))"
@@ -865,13 +866,31 @@ void hhcl::pvirtfuehraus()
 																			if (lerg?*lerg:0) {
 																				if (ficdsp!=255) ficdsp=33023; // orange
 																			} else {
-																				caus<<rot<<"neue Nephropathie!"<<endl;
+//																				caus<<rot<<"neue Nephropathie!"<<endl;
 																				ficdsp=255;
 																			}
 																		} // 	if (!ni.obqueryfehler)
 																	} // aerg?*aerg:0
 																} // !voralb.obqueryfehler
 															} // if (obpid && iwert>30)
+															// 11. Vit B12
+														} else if (abkue=="B12N"||abkue=="VB12"||abkue=="VI1201") {
+															if (obpid && (einh=="pg/ml" && iwert<197)) {
+																	if (ficd!="") ficd+=',';
+																	ficd+="E53.8";
+																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE 'E53.8|D51' AND obdauer<>0",aktc,ZDB);
+																	if (!hs.obqueryfehler) {
+																		const char *const *const *const lerg{hs.HolZeile()};
+																		if (lerg?*lerg:0) {
+																			if (ficdsp!=255) ficdsp=33023; // orange
+																		} else {
+																		  caus<<rot<<"neuer Vit-B12-Mangel!"<<endl;
+																			ficdsp=255;
+																		}
+																	} // 	if (!ni.obqueryfehler)
+															}
+															// 10. Nephropathie
+															// s. Zieldbfunktionen obLabI
 														} // if (abkue==  ...			else if (abkue=="HB")
 															//									if (hinw!="") KLA
 														reine.hz("Hinweise",hinw);
