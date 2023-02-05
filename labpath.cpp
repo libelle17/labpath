@@ -924,13 +924,30 @@ void hhcl::pvirtfuehraus()
 																			if (lerg?*lerg:0) {
 																				if (ficdsp!=255) ficdsp=33023; // orange
 																			} else {
-																		caus<<rot<<"neuer sekundärer Hyperpara!"<<schwarz<<endl;
+//																		caus<<rot<<"neuer sekundärer Hyperpara!"<<schwarz<<endl;
 																				ficdsp=255;
 																			} // if (lerg?*lerg:0)
 																		} // 	if (!ni.obqueryfehler)
 																	} // 	if (nierg?*nierg:0)
 																} // 	if (!niin.obqueryfehler) 
 															} // if (obpid && iwert<65)
+															// 11. MAK
+														} else if (abkue=="MAK"||abkue=="TPO.01") {
+															caus<<rot<<"Thyreoiditis untersucht: "<<iwert<<" "<<einh<<schwarz<<endl;
+															if (obpid && iwert>34) {
+																	if (ficd!="") ficd+=',';
+																	ficd+="E06.3";
+																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E06' AND obdauer<>0",aktc,ZDB);
+																	if (!hs.obqueryfehler) {
+																		const char *const *const *const lerg{hs.HolZeile()};
+																		if (lerg?*lerg:0) {
+																			if (ficdsp!=255) ficdsp=33023; // orange
+																		} else {
+																			caus<<rot<<"neue Thyreoiditis"<<schwarz<<endl;
+																			ficdsp=255;
+																		} // if (lerg?*lerg:0)
+																	} // 	if (!ni.obqueryfehler)
+															} // 	if (obpid && (einh=="pg/ml" && iwert<197))
 														} // if (abkue==  ...			else if (abkue=="HB")
 															//									if (hinw!="") KLA
 														reine.hz("Hinweise",hinw);
