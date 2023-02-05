@@ -920,8 +920,8 @@ void hhcl::pvirtfuehraus()
 																	const char *const *const *const nierg{niin.HolZeile()};
 																	if (nierg?*nierg:0) {
 																		if (ficd!="") ficd+=',';
-																		ficd+="E53.8";
-																		RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E53.8|^D51' AND obdauer<>0",aktc,ZDB);
+																		ficd+="E21.1";
+																		RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E21' AND obdauer<>0",aktc,ZDB);
 																		if (!hs.obqueryfehler) {
 																			const char *const *const *const lerg{hs.HolZeile()};
 																			if (lerg?*lerg:0) {
@@ -954,7 +954,7 @@ void hhcl::pvirtfuehraus()
 															// 11. TRAK
 														} else if (abkue=="TRAKKM"||abkue=="TRAKPM"||abkue=="TRAKPR"||abkue=="TRAK"||abkue=="TRAK_K"
 																       ||abkue=="TSRE01"||abkue=="TSRE") {
-															caus<<rot<<"Basedow untersucht: "<<rewert<<" "<<einh<<schwarz<<endl;
+//															caus<<rot<<"Basedow untersucht: "<<rewert<<" "<<einh<<schwarz<<endl;
 															if (obpid && rewert>1.58) {
 																	if (ficd!="") ficd+=',';
 																	ficd+="E05.0";
@@ -964,7 +964,7 @@ void hhcl::pvirtfuehraus()
 																		if (lerg?*lerg:0) {
 																			if (ficdsp!=255) ficdsp=33023; // orange
 																		} else {
-																			caus<<rot<<"neuer Basedow"<<schwarz<<endl;
+//																			caus<<rot<<"neuer Basedow"<<schwarz<<endl;
 																			ficdsp=255;
 																		} // if (lerg?*lerg:0)
 																	} // 	if (!ni.obqueryfehler)
