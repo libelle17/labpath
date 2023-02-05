@@ -957,8 +957,8 @@ void hhcl::pvirtfuehraus()
 															caus<<rot<<"Basedow untersucht: "<<rewert<<" "<<einh<<schwarz<<endl;
 															if (obpid && rewert>1.58) {
 																	if (ficd!="") ficd+=',';
-																	ficd+="E06.3";
-																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E06' AND obdauer<>0",aktc,ZDB);
+																	ficd+="E05.0";
+																	RS hs(My,"SELECT icd FROM diagview WHERE pat_id="+pid+" AND gicd RLIKE '^E05.0' AND obdauer<>0",aktc,ZDB);
 																	if (!hs.obqueryfehler) {
 																		const char *const *const *const lerg{hs.HolZeile()};
 																		if (lerg?*lerg:0) {
