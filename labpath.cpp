@@ -674,7 +674,8 @@ void hhcl::pvirtfuehraus()
 																	hinw+="eGFR <-> "+mfmg+" mg Metformin/d!";
 																	hinwsp=255; // vbred
 																}
-																if (rewert<45) {
+																// Wert 55 am 6.2.23 willkuerlich gewaehlt
+																if (rewert<55) {
 																	if (ficd!="") ficd+=',';
 																	if (rewert<15) ficd+="N18.5"; else if (rewert<30) ficd+="N18.4"; else ficd+="N18.3";
 																	RS ni(My,"SELECT gicd FROM diagview WHERE pat_id = "+pid+" AND gicd RLIKE '^N1[89]' AND obdauer<>0",aktc,ZDB);
