@@ -41,6 +41,7 @@ enum T_
 	T_ID_der_Einlesung,
 	T_fertig,
 	T_Dateien_gefunden,
+	T_davon_neu,
 	T_Parse,
 	T_Patient,
 	T_namsp,
