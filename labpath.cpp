@@ -598,8 +598,8 @@ void hhcl::pvirtfuehraus()
 																			",SUM(art='tk' OR inhalt LIKE '%(tk)%') tkz"
 																			",SUM(art='wd' OR inhalt LIKE '%(wd)%') wdz"
 																			",SUM(art='ah' OR inhalt LIKE '%(ah)%') ahz "
-																			",COALESCE((SELECT 1 FROM desktop WHERE pat_id = f.pat_id AND iconpath RLIKE '4eckblau' AND showasnote=0 LIMIT 1),0) obk "
-																			",COALESCE((SELECT 1 FROM desktop WHERE pat_id = f.pat_id AND iconpath RLIKE '4eckgelb' AND showasnote=0 LIMIT 1),0) obs "
+																			",COALESCE((SELECT 1 FROM desktop WHERE pat_id ="+pid+" AND iconpath RLIKE '4eckblau' AND showasnote=0 LIMIT 1),0) obk "
+																			",COALESCE((SELECT 1 FROM desktop WHERE pat_id ="+pid+" AND iconpath RLIKE '4eckgelb' AND showasnote=0 LIMIT 1),0) obs "
 																			"FROM ( SELECT art,inhalt "
 																			" FROM eintraege WHERE (art in ('tk','gs','wd','ah') OR inhalt RLIKE '\\((gs|tk|wd|ah)\\)') AND pat_id="+pid+
 																			" ORDER BY zeitpunkt DESC LIMIT 7 "
