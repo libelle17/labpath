@@ -578,6 +578,8 @@ void hhcl::pvirtfuehraus()
 																			"  WHEN tkz<>0 AND gsz=0 AND (wdz<>0 OR ahz<>0) THEN 13850042 "// vbmittellila, rgb(186,85,211)
 																			"  WHEN tkz=0 AND gsz<>0 AND (wdz<>0 OR ahz<>0) THEN 33023 " // orange, &H80FF&
 																			"  WHEN tkz<>0 AND gsz<>0 AND (wdz<>0 OR ahz<>0) THEN 755384 " // vbmittelbraun, RGB(184,134,11)
+																			"  WHEN obk<>0 THEN 16767449 " // hellblau
+																			"  WHEN obs<>0 THEN 12648447 " // vbhellgelb
 																			"  ELSE 16777215 " // FFFFFF
 																			" END namsp,"
 																			" CASE "
@@ -596,6 +598,8 @@ void hhcl::pvirtfuehraus()
 																			",SUM(art='tk' OR inhalt LIKE '%(tk)%') tkz"
 																			",SUM(art='wd' OR inhalt LIKE '%(wd)%') wdz"
 																			",SUM(art='ah' OR inhalt LIKE '%(ah)%') ahz "
+																			",COALESCE((SELECT 1 FROM desktop WHERE pat_id = f.pat_id AND iconpath RLIKE '4eckblau' AND showasnote=0 LIMIT 1),0) obk "
+																			",COALESCE((SELECT 1 FROM desktop WHERE pat_id = f.pat_id AND iconpath RLIKE '4eckgelb' AND showasnote=0 LIMIT 1),0) obs "
 																			"FROM ( SELECT art,inhalt "
 																			" FROM eintraege WHERE (art in ('tk','gs','wd','ah') OR inhalt RLIKE '\\((gs|tk|wd|ah)\\)') AND pat_id="+pid+
 																			" ORDER BY zeitpunkt DESC LIMIT 7 "
