@@ -206,7 +206,7 @@ void hhcl::prueflpatel(DB *My, const size_t aktc, const int obverb, const int ob
 		Tabelle taba(My,labpatel,felder,elemzahl(felder),indices,elemzahl(indices),0,0,Tx[T_Path_Labor_Einlesungen]/*//,"InnoDB","utf8","utf8_general_ci","DYNAMIC"*/);
 		if (taba.prueftab(aktc,obverb)) {
 			fLog(rots+Tx[T_Fehler_beim_Pruefen_von]+schwarz+labpatel,1,1);
-			exit(11);
+			kexitDB(My,11);
 		}
 	}
 } // prueflpath
@@ -247,7 +247,7 @@ void hhcl::prueflpath(DB *My, const size_t aktc, const int obverb, const int obl
 				/*//,"InnoDB","utf8","utf8_general_ci","DYNAMIC"*/);
 		if (taba.prueftab(aktc,obverb)) {
 			fLog(rots+Tx[T_Fehler_beim_Pruefen_von]+schwarz+labpath,1,1);
-			exit(11);
+			kexitDB(My,11);
 		}
 	} // if (!direkt)
 } // int pruefouttab(DB *My, string touta, int obverb, int oblog, uchar direkt=0)
